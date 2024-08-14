@@ -1,4 +1,4 @@
-cat("\n... Calculating LSGs for each Sector using the make_lsg function ...\n")
+cat("\nCalculating LSGs for each Sector using the make_lsg function ...\n")
 
 main <- data.list$main
 
@@ -50,19 +50,21 @@ non_critical_protection <- c("non_crit_prot_1",
                              "non_crit_prot_3",
                              "non_crit_prot_4")
 
-main <- main %>%
-  mutate(noncrit_prot_total = case_when(is.na(non_crit_prot_1) | is.na(non_crit_prot_2) | 
-                                          is.na(non_crit_prot_3) | is.na(non_crit_prot_4)  ~ NA_real_,
-                                        rowSums(across(non_critical_protection, .fns = as.numeric), na.rm =T)/4 >= 0.66 ~ 3,
-                                        rowSums(across(non_critical_protection, .fns = as.numeric), na.rm =T)/4 >= 0.33 ~ 2,
-                                        rowSums(across(non_critical_protection, .fns = as.numeric), na.rm =T)/4 >= 0 ~ 1,
-                                        TRUE ~ NA_real_))
 
-main$lsg_protection <- make_lsg(main,
-                                crit_to_4plus = c("crit_prot_3"),
-                                crit_to_4 = c("crit_prot_1"),
-                                crit_to_3 = c('crit_prot_2','crit_prot_4'),
-                                non_crit = "noncrit_prot_total")
+# we don't have non-critical this year
+# main <- main %>%
+#   mutate(noncrit_prot_total = case_when(is.na(non_crit_prot_1) | is.na(non_crit_prot_2) | 
+#                                           is.na(non_crit_prot_3) | is.na(non_crit_prot_4)  ~ NA_real_,
+#                                         rowSums(across(non_critical_protection, .fns = as.numeric), na.rm =T)/4 >= 0.66 ~ 3,
+#                                         rowSums(across(non_critical_protection, .fns = as.numeric), na.rm =T)/4 >= 0.33 ~ 2,
+#                                         rowSums(across(non_critical_protection, .fns = as.numeric), na.rm =T)/4 >= 0 ~ 1,
+#                                         TRUE ~ NA_real_))
+# 
+# main$lsg_protection <- make_lsg(main,
+#                                 crit_to_4plus = c("crit_prot_3"),
+#                                 crit_to_4 = c("crit_prot_1"),
+#                                 crit_to_3 = c('crit_prot_2','crit_prot_4'),
+#                                 non_crit = "noncrit_prot_total")
 
 
 ## Food Security
@@ -92,6 +94,6 @@ main <- main %>%
   ungroup()
 
 data.list$main <- main
-cat("...Finish Calculating LSGs and MSNI\n")
+cat("Finish Calculating LSGs and MSNI\n")
 
 

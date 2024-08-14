@@ -1,5 +1,5 @@
-```{r setup, include=FALSE}
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+cat("\014")
 strings <- c(
   # provide a full name for the title of output documents (e.g. "[POL] Post-Distribution Monitoring")
   dataset.name = "CINM Ukraine 2024",
@@ -9,7 +9,7 @@ strings <- c(
   dataset.date = "August 2024",
   # this one is appended to the end of filenames
   out_date = stringr::str_sub(stringr::str_remove_all(Sys.Date(), '-'), 3),
-  # the filename of your data for analysis
+  # the file name of your data for analysis
   filename.data = "data/MSNA2403_2024_final_anonymized_data_19July2024_weighted.xlsx",
   filename.tool = "",  
   filename.daf.tabular = "", 
@@ -18,16 +18,15 @@ strings <- c(
 
 
 params  <- c(
-    # fix_sheet_names_to_match should be one of "tool", "data", or "none"
-    fix_sheet_names_to_match = "data",
-    combine_folder = "temp/combine/"
+  # fix_sheet_names_to_match should be one of "tool", "data", or "none"
+  fix_sheet_names_to_match = "data",
+  combine_folder = "temp/combine/"
 )
 
 knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
 options(scipen = 999)
 rm(list=ls()[!ls() %in% c("params", "strings")])
-  
+
 source("src/init.R")
 source("src/max_lsg.R")
 # source("src/format_dataset.R")
-```

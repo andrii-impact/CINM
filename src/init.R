@@ -1,3 +1,5 @@
+library(writexl)
+
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(tidyverse, readxl, writexl, openxlsx, randomcoloR, sf, anytime, DT,
                cluster, survey, srvyr, knitr, webshot, docstring, tcltk, scales)

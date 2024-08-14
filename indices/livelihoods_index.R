@@ -46,10 +46,10 @@ livelihoods <- data.list$main %>%
       TRUE ~ NA
     ),
     income_quantity = case_when(
-      (total_inc_per_capita <= 0.4 * median_inc) ~ 4,
-      (((total_inc_per_capita > 0.4 * median_inc & total_inc_per_capita <= 0.6 * median_inc))) ~ 3,
-      ((total_inc_per_capita > 0.6 * median_inc & total_inc_per_capita <= 0.8 * median_inc)) ~ 2,
-      (total_inc_per_capita > 0.8 * median_inc) ~ 1,
+      (as.numeric(total_inc_per_capita) <= 0.4 * median_inc) ~ 4,
+      (((as.numeric(total_inc_per_capita) > 0.4 * median_inc & as.numeric(total_inc_per_capita) <= 0.6 * median_inc))) ~ 3,
+      ((as.numeric(total_inc_per_capita) > 0.6 * median_inc & as.numeric(total_inc_per_capita) <= 0.8 * median_inc)) ~ 2,
+      (as.numeric(total_inc_per_capita) > 0.8 * median_inc) ~ 1,
       is.na(total_inc_per_capita) | I_11_struggle_enough_money %in% c("dont_know", "prefer_not_to_answer") ~ NA,
       TRUE ~ -1
     )
