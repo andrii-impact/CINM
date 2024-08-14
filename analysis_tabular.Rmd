@@ -1,4 +1,5 @@
 ```{r setup, include=FALSE}
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 strings <- c(
   # provide a full name for the title of output documents (e.g. "[POL] Post-Distribution Monitoring")
   dataset.name = "CINM Ukraine 2024",

@@ -7,14 +7,14 @@
 print('Running the LSGs')
 # source('src/max_lsg.R')
 
-source('Indices/livelihoods_index.R') # CHECK LIVELIHOOD CRIT_3
-source('Indices/protection_index.R')
-source('Indices/education_index.R') # CHECK
-source('Indices/shelter_index.R') # CHECK SHELTER CRIT_3
-source('Indices/health_index.R')
-source('Indices/wash_index.R') # CHECK WASH CRIT_1
+source('indices/livelihoods_index.R') # CHECK LIVELIHOOD CRIT_3
+source('indices/protection_index.R')
+source('indices/education_index.R') # CHECK
+source('indices/shelter_index.R') # CHECK SHELTER CRIT_3
+source('indices/health_index.R')
+source('indices/wash_index.R') # CHECK WASH CRIT_1
 
-source('Indices/lsg_msni.R')
+source('indices/lsg_msni.R')
 
 
 # -------------------------------- intercrossing --------------------------------------
