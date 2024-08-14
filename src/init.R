@@ -17,10 +17,6 @@ na_min <- function(x){ifelse( !all(is.na(x)), min(x, na.rm=T), NA)}
 options(scipen = 999)
 options(dplyr.summarise.inform = FALSE)
 
-# ------------------------------------------------------------------------------
-
-oblast_labels <- read_excel(strings['filename.labels.oblasts'])
-
 ##  LOAD DATA -------------------------------------------------------------------
 
 cat("\n> Loading data for analysis from", strings['filename.data'], "...\n")
