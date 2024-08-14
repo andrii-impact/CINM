@@ -23,7 +23,6 @@ params  <- c(
   combine_folder = "temp/combine/"
 )
 
-knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE)
 options(scipen = 999)
 rm(list=ls()[!ls() %in% c("params", "strings")])
 

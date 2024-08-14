@@ -1,20 +1,20 @@
-social <- c(
+j27_social <- c(
   "J_27_income_sources/pension",
   "J_27_income_sources/other_government_social_benefits_or_assistance"
 )
-assistance <- c(
+j27_assistance <- c(
   "J_27_income_sources/idp_benefits",
   "J_27_income_sources/humanitarian_aid",
   "J_27_income_sources/loans_or_support_from_family_and_friends_within_ukraine",
   "J_27_income_sources/loans_support_or_charitable_donations_from_community_members"
 )
 
-irregular <- c(
+j27_irregular <- c(
   "J_27_income_sources/casual_or_daily_labour",
   "J_27_income_sources/other"
 )
 
-regular <- c(
+j27_regular <- c(
   "J_27_income_sources/salaried_work",
   "J_27_income_sources/income_from_own_business_or_regular_trade",
   "J_27_income_sources/income_from_rent",
@@ -22,7 +22,7 @@ regular <- c(
   "J_27_income_sources/money_transfers_from_abroad_from_family_and_friends"
 )
 
-undefined <- c(
+j27_undefined <- c(
   "J_27_income_sources/dont_know",
   "J_27_income_sources/prefer_not_to_answer"
 )
@@ -31,12 +31,12 @@ median_inc <- 5865  #sic
 
 livelihoods <- data.list$main %>%
   mutate(
-    soc = rowSums(across(social, as.numeric),na.rm = TRUE),
-    ass = rowSums(across(assistance, as.numeric),na.rm = TRUE),
-    irr = rowSums(across(irregular, as.numeric),na.rm = TRUE),
-    reg = rowSums(across(regular, as.numeric),na.rm = TRUE),
+    soc = rowSums(across(j27_social, as.numeric),na.rm = TRUE),
+    ass = rowSums(across(j27_assistance, as.numeric),na.rm = TRUE),
+    irr = rowSums(across(j27_irregular, as.numeric),na.rm = TRUE),
+    reg = rowSums(across(j27_regular, as.numeric),na.rm = TRUE),
     non = as.numeric(data.list$main$`J_27_income_sources/none`),
-    undef = rowSums(across(undefined, as.numeric),na.rm = TRUE),
+    undef = rowSums(across(j27_undefined, as.numeric),na.rm = TRUE),
     income_source = case_when(
       ( (ass > 0 & (soc+reg+irr+non+undef) == 0 ) | (non > 0 & (soc+reg+irr+ass+undef) == 0) ) ~ 4,
       ( ( (reg+soc+irr) > 0 & ass > 0  & (non+undef) == 0 ) | ( (irr) > 0 & (soc+reg+ass+non+undef) == 0 ) ) ~ 3,
@@ -52,9 +52,17 @@ livelihoods <- data.list$main %>%
       (as.numeric(total_inc_per_capita) > 0.8 * median_inc) ~ 1,
       is.na(total_inc_per_capita) | I_11_struggle_enough_money %in% c("dont_know", "prefer_not_to_answer") ~ NA,
       TRUE ~ -1
+    ),
+    coping = case_when(
+      lcsi_score == "Emergency" ~ 4,
+      lcsi_score == "Crisis" ~ 3,
+      lcsi_score == "Stress" ~ 2,
+      lcsi_score == "No coping" ~ 1,
+      is.na(lcsi_score) ~ NA,
+      TRUE ~ -1
     )
   ) %>% 
-  select(uuid, income_source, income_quantity)
+  select(uuid, income_source, income_quantity, coping)
 
 data.list$main <- data.list$main %>%
   left_join(livelihoods, by = "uuid")

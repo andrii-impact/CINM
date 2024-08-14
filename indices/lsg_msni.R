@@ -34,7 +34,8 @@ main$lsg_wash <- make_lsg(main,
 
 main$lsg_livelihoods <- make_lsg(main,
                                  crit_to_4 = c("income_source",
-                                               "income_quantity"
+                                               "income_quantity",
+                                               "coping"
                                                )
                                  )
 
