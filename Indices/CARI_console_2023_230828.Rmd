@@ -1,0 +1,880 @@
+---
+title: "CARI console indicators"
+output: html_document
+date: "2023-01-05"
+toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+```
+
+```{r}
+library(dplyr)
+library(openxlsx)
+library(broom)
+library(tidyr)
+library(stringr)
+library(ggplot2)
+library(xtable)
+library(gtsummary)
+library(fauxnaif)
+library(geojsonio)
+library(broom)
+library(viridis)
+library(mice)
+
+```
+# Dataset
+
+```{r}
+
+data_path <- "C:/Users/reach/Downloads/UKR_MSNA_2023_Clean_Dataset_August_2023.xlsx"
+
+main_ds <- read.xlsx(data_path, sheet = 1)
+hh_members <- read.xlsx(data_path, sheet = 2)
+
+#main_ds_copy <- read.xlsx("C:\\Users\\hanna.kurovska\\OneDrive - World Food Programme\\Desktop\\RAM\\MSNA\\Dataset\\Clean\\REACH_WFP_MSNA_UKR_Final_Data_Internal.xlsx", sheet = "main")
+```
+
+
+mutate uniform oblast column for F2F and CATI data
+
+```{r}
+main_ds <- main_ds |> 
+  mutate(oblast_total = coalesce(oblast, O_4_current_location_oblast))
+```
+
+
+# FCS
+
+FCS variables
+
+"Prefer not to answer" is turned to 0.
+
+```{r}
+nam_main_ds <- names(main_ds)
+fcs_names <- nam_main_ds[grepl("fcs", nam_main_ds)]
+# 2023
+#fcs_names <- fcs_names[grepl("number", fcs_names)]
+
+frt <- NA
+for(f in fcs_names){
+  t <- main_ds |> 
+    count(!!sym(f)) |>
+    mutate(prp = n/sum(n),
+           var = f) |>
+    setNames(c("cat", "n", "prp", "var"))
+  frt <- rbind(frt, t)
+}
+
+ i <- 1
+ for(i in 1:length(fcs_names)){
+   
+   main_ds[,paste0(fcs_names[i])] <- ifelse(main_ds[,paste0(fcs_names[i])] == "prefer_not_to_answer", "0", main_ds[,paste0(fcs_names[i])]) 
+   
+   main_ds[,paste0(fcs_names[i])] <- as.integer(main_ds[,paste0(fcs_names[i])])
+ }
+```
+
+FCS calculation
+
+```{r}
+#main_ds <- main_ds |>
+#  mutate(fcs = mapply(sum, (G_1_1_fcs_cereals*2), (G_1_2_fcs_legumens*3), (G_1_3_fcs_dairy*4), (G_1_4_fcs_meat*4), (G_1_5_fcs_vegetables), (G_1_6_fcs_fruits), (G_1_7_fcs_oil*0.5), (G_1_8_fcs_sugar*0.5)))
+
+# 2023
+main_ds <- main_ds |>
+  mutate(across(all_of(fcs_names), as.numeric))
+
+main_ds <- main_ds |>
+  mutate(fcs = mapply(sum, (G_1_1_fcs_cereals*2), (G_1_2_fcs_legumens*3), (G_1_6_fcs_dairy*4), (G_1_5_fcs_meat*4), (G_1_3_fcs_vegetables), (G_1_4_fcs_fruits), (G_1_7_fcs_oil*0.5), (G_1_8_fcs_sugar*0.5)))
+
+
+```
+
+Removing zero FCS (replacing to NA)
+
+```{r}
+main_ds |> count(fcs < 7)
+
+main_ds <- main_ds |>
+  mutate(fcs = ifelse(fcs < 7, NA, fcs))
+```
+
+
+Plotting FCS
+
+```{r}
+ggplot(main_ds, aes(x = fcs))+
+  geom_area(stat = "bin", alpha = 0.8)+
+  theme_minimal()+
+  geom_vline(xintercept = 28, color = "red")+
+  geom_vline(xintercept = 42, color = "red")
+```
+
+
+FCS groups (Ukraine) (28-42 treshold)
+
+```{r}
+main_ds$fcs_groups <- cut(main_ds$fcs, breaks = c(0, 28, 42, Inf), include.lowest = T, labels = c("Poor", "Borderline", "Acceptable"))
+
+main_ds <- addindicators::add_fcs(main_ds, fcs_cereal = "G_1_1_fcs_cereals",fcs_legumes = "G_1_2_fcs_legumens",
+                   fcs_dairy = "G_1_6_fcs_dairy", fcs_fruit = "G_1_4_fcs_fruits", 
+                   fcs_veg = "G_1_3_fcs_vegetables",fcs_meat ="G_1_5_fcs_meat" ,
+                   fcs_sugar = "G_1_8_fcs_sugar" ,fcs_oil = "G_1_7_fcs_oil",
+                   "alternative 28-42") 
+
+table(main_ds$fcs_groups)
+
+main_ds <- main_ds %>% 
+  mutate(
+    macroregion = case_when(
+      oblast_total %in% c('UA07','UA21','UA26','UA46','UA56','UA61','UA68','UA73') ~ 'West',
+      oblast_total %in% c('UA05','UA35','UA53','UA71') ~ 'Center',
+      oblast_total %in% c('UA14','UA12','UA23','UA63') ~ 'East',
+      oblast_total %in% c('UA18','UA32','UA80','UA59','UA74') ~ 'North',
+      oblast_total %in% c('UA48','UA51','UA65') ~ 'South'
+    )
+    
+  )
+
+des_df <- srvyr::as_survey_design(main_ds, weights = weight)
+
+tbl <- analysistools::create_analysis_prop_select_one(des_df,
+                                               group_var = 'macroregion',
+                                               analysis_var = "fcs_cat") %>% 
+  select(analysis_var_value, group_var_value,n_total) %>% 
+  pivot
+
+```
+
+Plot FCS groups
+
+```{r}
+ggplot(main_ds, aes(x = O_1_respondent_consent, fill = fcs_groups))+ # 2023 - variable change
+  geom_bar(position = "fill", stat = "count", width = 0.5)+
+  theme_minimal()+
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank()
+  )
+```
+FCS groups frequencies
+
+```{r}
+#main_ds |> select(o1_current_oblast, fcs_groups) |> tbl_summary(by = o1_current_oblast) |> add_overall()
+# 2023
+main_ds |> select(oblast_total, fcs_groups) |> tbl_summary(by = oblast_total) |> add_overall()
+
+#main_ds |> group_by(fcs_groups) |> summarise(n = n()) |> ungroup() |> mutate(prp = n/sum(n))
+```
+
+# rCSI
+
+rCSi calculation
+
+(Prefer not to answer is getting replaced by 0, and obs. that have all rCS variables "prefer not to answer", are replaced to NA)
+
+```{r}
+rcs_names <- nam_main_ds[grepl("rcs", nam_main_ds)]
+
+# change: removing "all rCSi--variables are "prefer not to answer""
+main_ds <- main_ds |> 
+  mutate(rcs_to_NA = case_when(if_all(rcs_names, ~ . == "prefer_not_to_answer") ~ "rm", TRUE ~ "kp")) |>
+  mutate(across(rcs_names, ~ case_when(rcs_to_NA == "kp" ~ .)))
+
+
+main_ds <- main_ds |>
+  mutate(across(rcs_names, str_replace, "prefer_not_to_answer", "0")) |> mutate(G_3_4_rcsi_restrict_consumption_adults = ifelse(is.na(G_3_4_rcsi_restrict_consumption_adults), "0", G_3_4_rcsi_restrict_consumption_adults)) |>
+  mutate(across(rcs_names, as.numeric))
+
+table(main_ds$rcs_to_NA)
+```
+
+Calculating rCSI
+
+```{r}
+main_ds <- main_ds |> mutate(rcsi = mapply(sum, (G_3_1_rcsi_cheaper_food), (G_3_2_rcsi_borrow_food*2), (G_3_5_rcsi_reduce_meals_number), (G_3_3_rcsi_limit_portion), (G_3_4_rcsi_restrict_consumption_adults*3)))
+```
+
+
+rCSI groups
+
+```{r}
+main_ds <- main_ds |> mutate(rcsi_groups = case_when(
+  rcsi < 4 ~ "Low rCSI",
+  rcsi >= 4 & rcsi <= 18 ~ "Medium rCSI",
+  rcsi > 18 ~ "High rCSI"
+))
+```
+
+Plotting rCSI groups
+
+```{r}
+ggplot(main_ds, aes(x = O_1_respondent_consent, fill = rcsi_groups))+
+  geom_bar(position = "fill", stat = "count", width = 0.5)+
+  theme_minimal()+
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank()
+  )
+```
+rCSI groups frequencies
+
+```{r}
+main_ds |> select(oblast_total, rcsi_groups) |> tbl_summary(by = oblast_total) |> add_overall()
+```
+
+
+# Current status CARI domain
+Groups for CARI (current status)
+
+```{r}
+main_ds$CARI_current_status <- case_when(
+  main_ds$fcs_groups == "Acceptable" & main_ds$rcsi < 4 ~ 1,
+  main_ds$fcs_groups == "Acceptable" & main_ds$rcsi >= 4 ~ 2,
+  main_ds$fcs_groups == "Borderline" ~ 3,
+  main_ds$fcs_groups == "Poor" ~ 4
+)
+
+```
+
+Plotting a current status domain
+
+```{r}
+ggplot(main_ds, aes(x = O_1_respondent_consent, fill = as.factor(CARI_current_status)))+
+  geom_bar(position = "fill", stat = "count", width = 0.5)+
+  theme_minimal()+
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank()
+  )
+```
+
+# LCS
+
+Livelihood coping strategies
+
+Mutating LCS (I_8_6 and I_8_7 are being merged together (reducing health or education expenditures))
+
+```{r}
+main_ds <- main_ds |> mutate(I_8_6_7_lcs_reduce_health_and_education_expenditures = case_when(
+  I_8_6_lcs_reduce_health_expenditures == "yes" | I_8_7_lcs_reduce_education_expenditures == "yes" ~ "yes",
+  I_8_6_lcs_reduce_health_expenditures == "no_have_already_exhausted_this_coping_strategy_and_cannot_use_it_again" | I_8_7_lcs_reduce_education_expenditures == "no_have_already_exhausted_this_coping_strategy_and_cannot_use_it_again" ~ "no_have_already_exhausted_this_coping_strategy_and_cannot_use_it_again",
+  TRUE ~ "no"
+
+))
+```
+
+Classifying LCS
+
+  1. Stress: Spending savings, Borrowing food, Eating elsewhere, selling HH assets; -Taking on additional job (not present)
+  2. crisis: Selling productive assets, Reducing health/education expenditures, Moving elsewhere
+  3. Emergency: Using degrading income sources, Selling a house, Ask strangers for money
+
+```{r}
+lcs_vars <- names(main_ds)[str_detect(names(main_ds), "_lcs_")]
+lcs_vars <- lcs_vars[! lcs_vars %in% c("I_8_6_lcs_reduce_health_expenditures", "I_8_7_lcs_reduce_education_expenditures", "I_8_12_lcs_move_another_dwelling", "I_8_13_lcs_abandon_hh_assets_goods", lcs_vars[str_starts(lcs_vars, "I_8_14_lcs_reason")])]
+
+
+stress_vars <- c( "I_8_2_lcs_spent_savings", 
+                  "I_8_3_lcs_forrowed_food", 
+                  "I_8_4_lcs_eat_elsewhere", 
+                  "I_8_1_lcs_sell_hh_assets")
+
+crisis_vars <- c("I_8_5_lcs_sell_productive_assets", 
+                 "I_8_6_7_lcs_reduce_health_and_education_expenditures", 
+                 "I_8_9_lcs_move_elsewhere")
+
+emergency_vars <- c("I_8_13_lcs_ask_stranger", 
+                    "I_8_8_lcs_sell_house", 
+                    "I_8_10_lcs_degrading_income_source")
+
+main_ds <- main_ds |> 
+  #rowwise() |> 
+  mutate(
+    NA_coping = ifelse(if_any(lcs_vars, ~ is.na(.)), 1, 0),
+    no_coping = 
+    ifelse(if_any(lcs_vars, ~ .  %in% c("yes", "no_have_already_exhausted_this_coping_strategy_and_cannot_use_it_again")), 0, 1),
+    stress_coping = 
+    ifelse(if_any(stress_vars, ~ .  %in% c("yes", "no_have_already_exhausted_this_coping_strategy_and_cannot_use_it_again")), 1, 0),
+    crisis_coping = 
+    ifelse(if_any(crisis_vars, ~ .  %in% c("yes", "no_have_already_exhausted_this_coping_strategy_and_cannot_use_it_again")), 1, 0),
+    emergency_coping = ifelse(if_any(emergency_vars, ~ .  %in% c("yes", "no_have_already_exhausted_this_coping_strategy_and_cannot_use_it_again")), 1, 0))
+```
+
+```{r}
+main_ds <- main_ds |> mutate(coping_strategy  = case_when(
+  emergency_coping == 1 ~ "emergency",
+  emergency_coping == 0 & crisis_coping == 1 ~ "crisis",
+  emergency_coping == 0 & crisis_coping == 0 & stress_coping == 1 ~ "stress",
+  emergency_coping == 0 & crisis_coping == 0 & stress_coping == 0 & NA_coping == 0 ~ "no_coping",
+  #NA_coping == 1 ~ NA_character_,
+  TRUE ~ NA_character_
+))
+
+
+```
+
+
+```{r}
+
+  main_ds <- main_ds |> mutate(lcs_cc = case_when(
+    coping_strategy == "no_coping" ~ 1,
+    coping_strategy == "stress" ~ 2,
+    coping_strategy == "crisis" ~ 3,
+    coping_strategy == "emergency" ~ 4
+  ))
+
+```
+
+
+
+Plotting coping strategies
+
+```{r}
+ggplot(main_ds, aes(x = O_1_respondent_consent, fill = coping_strategy))+
+  geom_bar(position = "fill", stat = "count", width = 0.5)+
+  theme_minimal()+
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank()
+  )
+```
+Use of coping strategies frequencies
+
+```{r}
+main_ds |> select(coping_strategy) |> tbl_summary()
+
+main_ds |> select(oblast_total, coping_strategy) |> tbl_summary(by = oblast_total) |> add_overall()
+```
+
+
+
+ECMEN
+
+Preparation:
+
+Preparing variables, removing text variables (others)
+
+```{r}
+# hh size as numeric
+main_ds <- main_ds |> mutate(A_8_hh_members = as.numeric(A_8_hh_members))
+
+# get expenditures variables
+exp_vars_all <- names(main_ds)[(str_starts(names(main_ds), "I_3_") | str_starts(names(main_ds), "I_4_") | str_starts(names(main_ds), "I_5_")) & !str_detect(names(main_ds), "_calc") & !str_detect(names(main_ds), "_0_")]
+
+exp_vars_all <- exp_vars_all[! exp_vars_all %in% c("I_5_10_all_other_infrequent_expenditures_please_specify_other", "I_4_15_all_other_frequent_expenditures_please_specify_other", "I_3_9_other_cashcredit_other")]
+
+# expenditure variables as numeric
+main_ds <- main_ds |> mutate(across(exp_vars_all, as.numeric))
+```
+
+
+Transforming variables per capita
+
+```{r}
+for(var in exp_vars_all){
+  main_ds <- main_ds |> mutate(!!sym(paste0(var, "_per_cap")):=!!sym(var)/A_8_hh_members)
+}
+
+#getting variables names
+exp_vars_all_pc <- names(main_ds)[str_ends(names(main_ds), "_per_cap")]
+```
+
+
+Replacing values above 99-th percentile with the value of 99-th percentiile
+
+```{r}
+for(var in exp_vars_all_pc){
+   x_q99 <- quantile(as.numeric(main_ds[, var]), 0.99, na.rm = T, type = 2)
+    print(paste0(var, " ", x_q99))
+#   main_ds <- main_ds |> mutate(!!var:=ifelse(!!sym(var) > x_q99, x_q99, !!sym(var)))
+ }
+```
+
+replacing outliers to NA for further imputation
+
+```{r}
+for (v in exp_vars_all_pc){
+  med <- median(main_ds[, paste0(v)], na.rm = T)
+  sd <- sd(main_ds[, paste0(v)], na.rm = T)
+  thr <- med+sd*3
+  print(paste0(v, " ", thr))
+  main_ds <- main_ds |> mutate(!!v:=ifelse(!!sym(v)>thr, NA, !!sym(v)))
+}
+```
+
+
+Checking the amount of missing data in expenditures
+
+```{r}
+nas <- as.data.frame(matrix(nrow = 0,ncol = 2))
+nas <- setNames(nas, c("NAs", "Varr"))
+rownames(nas) <- NULL
+for (v in exp_vars_all_pc){
+temp <- main_ds |> 
+  summarise(sum(is.na(!!sym(v)))) |>
+  mutate(name = paste0(v))
+ temp <-  setNames(temp, c("NAs", "Var"))
+rownames(temp) <- NULL
+nas <- rbind(temp, nas)
+}
+nas <- nas |> 
+  mutate(prp_missing = NAs/nrow(main_ds))
+nas |> arrange(desc(prp_missing))
+```
+Note: Even though the largest share of NAs is present in the variables, that are not part of ECMEN indicator, for some ECMEN variables, % of missings is > 10%. Thus, to handle missing values, imputation will be used.
+
+
+Preparing predictor variables
+
+
+1. hh size, - numeric
+2. hhs with children - binary
+3. hohh's age - numeric
+ - 4. rural/urban (raion) - categorical (bin)
+5. oblast - categorical (bin)
+6. Total income - numeric
+7. FCS - numeric
+8. HoHH's gender
+9. HHs with PwDs
+10. Own production as food source
+11. Assistance received (any kind)
+
+Transforming predictor variables
+
+```{r}
+# Extracting HoHH's gender and age data
+
+# 1 - hh size
+main_ds$A_8_hh_members <- as.numeric(main_ds$A_8_hh_members)
+
+# 2 - hh with children
+children <- hh_members |>
+  mutate(child = ifelse(as.numeric(A_14_hh_member_age) < 18, 1, 0))
+
+children <- children |>
+  group_by(uuid) |>
+  summarise(count_less_than_18 = sum(child))
+
+main_ds <- main_ds |>
+  left_join(children)
+#main_ds$count_less_than_18 <- as.numeric(main_ds$count_less_than_18)
+main_ds$hh_with_children <- ifelse(main_ds$count_less_than_18 > 0, 1, 0)
+
+# 3 resp's age
+main_ds$A_1_respondent_age <- as.numeric(main_ds$A_1_respondent_age)
+
+#rural urban
+# = to be added
+
+# 5. oblast (to dummy)
+main_ds <- main_ds |> 
+  mutate(n = 1) |>
+  pivot_wider(names_from = oblast_total, values_from = n, values_fill = 0, names_prefix = "obl_")
+
+# 
+income_vars <- names(main_ds)[grepl("I_2_", names(main_ds))]
+income_vars <- income_vars[!grepl("_0_", income_vars)]
+main_ds <- main_ds |> mutate(across(all_of(income_vars), ~as.numeric(.)))
+main_ds <- main_ds |> 
+  mutate(total_income_calc=rowSums(across(all_of(income_vars)), na.rm = T))
+main_ds$total_income_calc <- as.numeric(main_ds$total_income_calc)
+main_ds$total_income_pc <- main_ds$total_income_calc/as.numeric(main_ds$A_8_hh_members)
+m <- median(main_ds$total_income_pc, na.rm = T)
+sd <- sd(main_ds$total_income_pc, na.rm = T)
+
+main_ds$total_income_pc <- ifelse(main_ds$total_income_pc > m+sd*3 | main_ds$total_income_pc < m-sd*3, NA, main_ds$total_income_pc)
+
+# respondents's gender
+
+main_ds <- main_ds |> 
+  mutate(n = 1) |>
+  pivot_wider(names_from = A_2_respondent_sex, values_from = n, values_fill = 0, names_prefix = "resp_")
+
+# Employed members in HH
+employed <- hh_members |> 
+  mutate(n = 1) |>
+  pivot_wider(everything(), names_from = A_17_hh_member_employment, values_from = n, values_fill = 0)
+  
+employed <- employed |>
+mutate(count_employed = rowSums(across(all_of(c("in_paid_work_permanent_job", "in_paid_work_temporary_job", "student_and_in_paid_work", "unofficially_employed_informal_work", "self_employed_owns_business", "in_military_service", "in_paid_work_daily_labour")))))
+
+employed <- employed |>
+  group_by(uuid) |>
+  summarise(count_employed = sum(count_employed))
+
+main_ds <- main_ds |>
+  left_join(employed)
+
+
+main_ds <- 
+  main_ds |>
+  mutate(hh_with_employed = ifelse(as.numeric(count_employed)>0, 1, 0))
+
+# PwDs in HH
+hh_members <- hh_members |>
+  
+  mutate(WG_disability3 = case_when(
+    A_19_wg_vis_ss %in% c("a_lot_of_difficulty", "cannot_do_at_all") | 
+      A_20_wg_hear_ss %in% c("a_lot_of_difficulty", "cannot_do_at_all") | 
+      A_21_wg_mob_ss %in% c("a_lot_of_difficulty", "cannot_do_at_all") | 
+      A_22_wg_cog_ss %in% c("a_lot_of_difficulty", "cannot_do_at_all") | 
+      A_23_wg_sc_ss %in% c("a_lot_of_difficulty", "cannot_do_at_all") | 
+      A_24_wg_com_ss %in% c("a_lot_of_difficulty", "cannot_do_at_all") ~ 1,
+    
+    A_19_wg_vis_ss %in% c("dont_know", "prefer_not_to_answer") | 
+      A_20_wg_hear_ss %in% c("dont_know", "prefer_not_to_answer") | 
+      A_21_wg_mob_ss %in% c("dont_know", "prefer_not_to_answer") | 
+      A_22_wg_cog_ss %in% c("dont_know", "prefer_not_to_answer") | 
+      A_23_wg_sc_ss %in% c("dont_know", "prefer_not_to_answer") | 
+      A_24_wg_com_ss %in% c("dont_know", "prefer_not_to_answer") ~ NA_real_,
+    
+    is.na(A_19_wg_vis_ss) | 
+      is.na(A_20_wg_hear_ss) | 
+      is.na(A_21_wg_mob_ss) | 
+      is.na(A_22_wg_cog_ss) | 
+      is.na(A_23_wg_sc_ss) | 
+      is.na(A_24_wg_com_ss) ~ NA_real_,
+    
+    TRUE ~ 0
+  ))
+
+pwd <- hh_members |>
+  group_by(uuid) |> 
+  summarise(count_disabled = sum(WG_disability3))
+
+main_ds <- main_ds |>
+  left_join(pwd)
+
+main_ds <- main_ds |> mutate(hhs_with_pwd = ifelse(as.numeric(count_disabled)>0, 1, 0))
+
+# fcs
+
+# own production as a food source
+
+main_ds$own_production <- as.numeric(main_ds$`G_4_main_food_sources/own_production`)
+
+# assistance received
+
+main_ds <- main_ds |>
+  mutate(L_4_assistance_received_factor = as.factor(L_4_assistance_received))
+```
+
+Imputing missing expenditures data using MICE multiple imputations
+
+1. selecting variables of interest (with expected influence on expenditures)
+
+```{r}
+predictors <- c("total_income_pc", "obl_UA32", "obl_UA26", "obl_UA48", "obl_UA46", "obl_UA59", "obl_UA63", "obl_UA56", "obl_UA68", "obl_UA61", "obl_UA05", "obl_UA73", "obl_UA21", "obl_UA12", "obl_UA18", "obl_UA51", "obl_UA35", "obl_UA07", "obl_UA80", "obl_UA74", "obl_UA71", "obl_UA23", "obl_UA53", "obl_UA65", "obl_UA14", "A_1_respondent_age", "hh_with_children", "A_8_hh_members", "resp_male", "resp_female", "hh_with_employed", "own_production", "fcs", "L_4_assistance_received_factor")
+
+ds_for_imp <- main_ds |>
+  select(all_of(c(predictors, exp_vars_all_pc)))
+```
+
+2. Imputing data (MICE imputation; "predictive means matching" method), 5 datasets
+
+```{r}
+imp <- mice(ds_for_imp, m = 5, maxit = 10, method = "pmm", seed = 123)
+impdat <- complete(imp,action="long",include = T)
+```
+
+Plotting imputed datasets for exploration
+
+```{r}
+plot_list <- list()
+
+for(i in 1:length(exp_vars_all_pc)){
+  p <- ggplot(impdat[,], aes(y = !!sym(exp_vars_all_pc[i]), x = .id, color = as.factor(.imp)))+
+  geom_line()
+  plot_list[[i]] <- p
+}
+
+#pdf("plots_imp.pdf", onefile = T)
+for (i in 1:length(exp_vars_all_pc)) {
+    print(plot_list[[i]])
+}
+#dev.off()
+```
+Checking the central tendency of imputed data
+
+```{r}
+for(v in exp_vars_all_pc){
+  print(with(impdat, by(impdat, .imp, function(x) c(mean(x[,paste0(v)] , na.rm = T),sd(x[,paste0(v)], na.rm = T), median(x[, paste0(v)], na.rm = T)))))
+  print(v)
+}
+```
+Even thought by multiple imputation methodology it is strongly adviced to perform analysis on each imputed dataset, because of the composite nature of the indicator, one dataset is to be selected. The dataset 1 is to be selected (as the one, that fits the original distribution ( visual analysis of plots + central tendencies))
+
+```{r}
+good_im_data <- impdat[impdat$.imp == 1,]
+names(good_im_data) <- paste0("imp1_", names(good_im_data))
+good_im_data_exp <- good_im_data |> select(starts_with("imp1_I_"))
+
+main_ds <- cbind(main_ds, good_im_data_exp)
+```
+
+
+Computing food expenditures (detailed)
+
+```{r}
+exp_food_vars <- names(main_ds)[str_starts(names(main_ds), "imp1_I_3_") & !str_ends(names(main_ds), "_calc") & str_ends(names(main_ds), "_per_cap")]
+
+exp_food_cashcredit_vars <- exp_food_vars[str_detect(exp_food_vars, "_cashcredit")]
+exp_food_own_vars <- exp_food_vars[str_detect(exp_food_vars, "own_produced")]
+
+main_ds <- main_ds |> mutate(exp_food_1m_cashcredit = rowSums(across(all_of(exp_food_cashcredit_vars), as.numeric), na.rm = T))
+
+main_ds <- main_ds |> mutate(exp_food_1m_own_produced = rowSums(across(all_of(exp_food_own_vars), as.numeric), na.rm = T))
+
+# 2023
+main_ds <- main_ds |> mutate(exp_food_total_ii = exp_food_1m_cashcredit+exp_food_1m_own_produced)
+
+## UPD fix
+
+#main_ds <- main_ds |> mutate(exp_food_1m_cashcredit = ifelse(Organization == "WFP", (exp_food_7d_cashcredit/7)*30, exp_food_7d_cashcredit),
+#                             exp_food_1m_own_produced = ifelse(Organization == "WFP",(exp_food_7d_own_produced/7)*30, exp_food_7d_own_produced))
+
+#main_ds <- main_ds |> mutate(exp_food_1m_total_aggr = exp_food_1m_cashcredit+exp_food_1m_own_produced)
+```
+
+Calculating NF aggregates
+
+```{r}
+## NF with 1m recall period
+exp_nfi_short_vars <- names(main_ds)[str_starts(names(main_ds), "imp1_I_4_") & str_ends(names(main_ds), "_per_cap")]
+exp_nfi_short_vars <- exp_nfi_short_vars[!exp_nfi_short_vars %in% c( "imp1_I_4_12_productive_assets_any_items_used_to_help_generate_income_ex_sewing_machine_tools_per_cap",                                                 #"imp1_I_4_15_all_other_frequent_expenditures_please_specify_per_cap", 
+                                                                     "imp1_I_4_1_rent_per_cap", "imp1_I_4_15_all_other_frequent_expenditures_please_specify_other_per_cap"
+                                                                     #"imp1_I_4_9_recreation_sport_culture_per_cap"
+                                                                     )]
+
+main_ds <- main_ds |> mutate(exp_nfi_short_1m = rowSums(across(all_of(exp_nfi_short_vars), as.numeric), na.rm = T))
+
+## NF with 6m recall period
+
+exp_nfi_long_vars <- names(main_ds)[str_starts(names(main_ds), "imp1_I_5_") & str_ends(names(main_ds), "_per_cap")]
+exp_nfi_long_vars <- exp_nfi_long_vars[!exp_nfi_long_vars %in% c("imp1_I_5_8_remittances_per_cap",
+#"imp1_I_5_10_all_other_infrequent_expenditures_please_specify_per_cap",
+"imp1_I_5_9_savings_ie_money_set_aside_for_the_longterm_per_cap", "imp1_I_5_10_all_other_infrequent_expenditures_please_specify_other_per_cap",
+"imp1_I_5_7_debt_repayment_per_cap")]
+
+main_ds <- main_ds |> mutate(exp_nfi_long_6m = rowSums(across(all_of(exp_nfi_long_vars), as.numeric), na.rm = T))
+
+main_ds <- main_ds |> mutate(exp_nfi_long_1m = exp_nfi_long_6m/6)
+
+main_ds <- main_ds |> mutate(exp_nfi_total = exp_nfi_short_1m + exp_nfi_long_1m)
+```
+
+
+Dealing with unrealistically low values (Food expenditures)
+
+```{r}
+main_ds |> count(exp_food_total_ii < 500)
+
+  main_ds <- main_ds |> mutate(exp_food_total_ii = ifelse(exp_food_total_ii < 500, 500, exp_food_total_ii))
+  
+  
+```
+Truncanting outliers (replacing values above 99% with the value of 99%)
+
+```{r}
+
+q99f <- quantile(main_ds$exp_food_total_ii, probs = 0.99)
+q99f
+
+main_ds <- main_ds |> mutate(exp_food_total_ii = ifelse(exp_food_total_ii > q99f, q99f, exp_food_total_ii))
+  
+```
+
+
+Imputing 0-s in NF expenditures with medians by raion
+
+```{r}
+main_ds <- main_ds |> mutate(raion_total = coalesce(raion, O_5_current_location_raion))
+
+main_ds <- main_ds |> group_by(raion_total) |> mutate(exp_nfi_total_ii = ifelse(exp_nfi_total == 0 | is.na(exp_nfi_total), median(exp_nfi_total), exp_nfi_total)) |> ungroup()
+
+#2023
+# hist(main_ds$exp_nfi_total)
+# main_ds |> count(exp_nfi_total == 0)
+# main_ds <- main_ds |> mutate(exp_nfi_total_ii = exp_nfi_total)
+```
+
+Truncanting outliers (replacing values above 99% with the value of 99%)
+
+```{r}
+summary(main_ds$exp_nfi_total_ii)
+q99nf <- quantile(main_ds$exp_nfi_total_ii, probs = 0.99)
+q99nf
+
+main_ds <- main_ds |> mutate(exp_nfi_total_ii = ifelse(exp_nfi_total_ii > q99nf, q99nf, exp_nfi_total_ii))
+  
+```
+
+Total expenditures
+  
+```{r}
+main_ds <- main_ds |> mutate(exp_total = exp_food_total_ii+exp_nfi_total_ii)
+
+#main_ds <- main_ds |> mutate(exp_total = exp_food_1m_cashcredit+exp_nfi_total)
+```
+
+Removing cash assistance
+
+1. Aggregating it per capita and removing outliers
+```{r}
+main_ds <-  main_ds |> mutate(ca_pc  = as.numeric(I_2_10_ngo_or_charity_assistance_)/A_8_hh_members)
+
+ca99 <- quantile(main_ds$ca_pc, 0.99, na.rm = T, type = 6)
+main_ds <- main_ds |> mutate(ca_pc = ifelse(ca_pc > ca99, ca99, ca_pc))
+
+main_ds <- main_ds |> mutate(ca_receivers = ifelse(is.na(ca_pc) | ca_pc == 0, "Not CA receiver", "CA receiver"))
+
+```
+
+2. Removing non-consumption part from CA
+
+```{r}
+main_ds <- main_ds |> mutate(non_consumption = I_4_12_productive_assets_any_items_used_to_help_generate_income_ex_sewing_machine_tools_per_cap+I_4_9_recreation_sport_culture+(I_5_7_debt_repayment_per_cap+I_5_8_remittances_per_cap+I_5_9_savings_ie_money_set_aside_for_the_longterm_per_cap)/6)
+
+main_ds <- main_ds |> mutate(
+  exp_cons_non_cons = non_consumption+exp_total,
+  non_cons_ratio = non_consumption/exp_cons_non_cons)
+
+mean(main_ds$non_cons_ratio, na.rm = T)
+
+main_ds <- main_ds |> group_by(ca_receivers) |> mutate(ca_pc_adjusted = ca_pc*(1-mean(non_cons_ratio, na.rm = T))) |> ungroup()
+```
+
+Substracting cash assistance and truncationg negative values to 0
+
+```{r}
+#main_ds <- main_ds |> mutate(ca_pc_adjusted = ifelse(is.na(ca_pc_adjusted), 0, ca_pc_adjusted))
+#main_ds <- main_ds |> mutate(exp_total_pc_no_ca = exp_total - ca_pc_adjusted)
+#main_ds <- main_ds |> mutate(exp_total_pc_no_ca = ifelse(exp_total_pc_no_ca < 0, 0, exp_total_pc_no_ca))
+# 2023
+
+main_ds <- main_ds |> mutate(ca_pc = ifelse(is.na(ca_pc),0, ca_pc),
+                             exp_total_pc_no_ca = exp_total - ca_pc)
+main_ds <- main_ds |> mutate(exp_total_pc_no_ca = ifelse(exp_total_pc_no_ca < 0, 0, exp_total_pc_no_ca))
+```
+
+MEB and SMEB thresholds
+
+```{r}
+#meb_gvt_old <- 5865
+#smeb_gvt_old <- 2589
+
+#meb_gvt_infl
+#smeb_gvt_infl
+
+#meb_cwg_1 <- 6318
+#smeb_cwg_1 <- 2691
+
+meb_cwg_2 <- 6318
+smeb_cwg_2 <- 3000
+
+#meb_med <- median(main_ds$exp_total_pc_no_ca)
+#smeb_med <- meb_med/2
+
+
+```
+
+Calculating economic capacity variables
+
+```{r}
+  meb <- meb_cwg_2
+  smeb <- smeb_cwg_2
+  main_ds <- main_ds |> mutate(ECMEN_above_MEB = ifelse(exp_total_pc_no_ca > meb, 1, 0),
+                             ECMEN_above_smeb = ifelse(exp_total_pc_no_ca > smeb, 1, 0),
+                             ECMEN_text = case_when(
+                               exp_total_pc_no_ca > meb ~ "Above MEB",
+                               exp_total_pc_no_ca <= meb & exp_total_pc_no_ca >= smeb ~ "Between MEB and SMEB",
+                               exp_total_pc_no_ca < smeb ~ "Below SMEB"
+                             ),
+                             ec_vulnerability = case_when(
+                               exp_total_pc_no_ca > meb ~ 1,
+                               exp_total_pc_no_ca <= meb & exp_total_pc_no_ca >= smeb ~ 3,
+                               exp_total_pc_no_ca < smeb ~ 4
+                             ))
+
+
+
+```
+
+Re-mutating oblast variable
+
+```{r}
+main_ds <- main_ds |> mutate(oblast_total = coalesce(oblast, O_4_current_location_oblast))
+```
+
+
+
+```{r}
+main_ds |> select(ec_vulnerability, oblast_total) |> tbl_summary(by = oblast_total) |> add_overall()
+
+```
+
+Aggregating coping capacity
+
+```{r}
+
+    main_ds <- main_ds |> mutate(coping_capacity = (lcs_cc + ec_vulnerability)/2)
+
+```
+
+Classifying per CARI scale
+
+```{r}
+
+  
+  main_ds <- main_ds |> 
+    mutate(cari_score= (CARI_current_status + coping_capacity)/2)
+
+  
+main_ds <- main_ds |> mutate(cari_lvl = case_when(
+  cari_score <= 1.25 ~ "Food secure",
+  cari_score >= 1.5 & cari_score <= 2.25 ~ "Marginally food secure",
+  cari_score >= 2.5 & cari_score <= 3.25 ~ "Moderately food insecure",
+  cari_score >= 3.5 ~ "Severely food insecure"))
+
+```
+
+Plotting CARI levels
+
+```{r}
+ggplot(main_ds, aes(x = O_1_respondent_consent, fill = cari_lvl))+
+  geom_bar(position = "fill", stat = "count", width = 0.5)+
+  theme_minimal()+
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank()
+  )
+```
+CARI levels frequencies
+
+```{r}
+#prop.table(table(main_ds$cari_lvl))
+
+main_ds |> select(starts_with("cari_lvl"), oblast_total) |> tbl_summary(by = oblast_total) |> add_overall()
+  
+```
+CARI table
+
+```{r}
+main_ds |> select(cari_lvl, CARI_current_status, ec_vulnerability, coping_strategy) |> tbl_summary(by = cari_lvl) |> add_overall()
+  
+  
+  #group_by(cari_lvl, CARI_current_status, ec_vulnerability, coping_strategy) |> summarise(n = n()) |> mutate(prop = n/sum(n)*100) |> pivot_wider(names_from = cari_lvl, values_from = c(prop))
+
+```
+
+
+Write the dataset with calculated variables
+
+```{r}
+write.xlsx(main_ds, "C:/Users/reach/Desktop/tabular_analysis_MSNI_gen/resources/MSNA23_clean_with_CARI_230829_1.xlsx")
+```
+
