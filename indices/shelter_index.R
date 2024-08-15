@@ -115,6 +115,39 @@ security_tenure_g6_undef <- c(
   "prefer_not_to_answer"
 )
 
+#=====
+
+leccy_g13_irr <- c(
+  "G_13_heating_type/gas",
+  "G_13_heating_type/electricity",
+  "G_13_heating_type/distrcit_heating",
+  "G_13_heating_type/wood_or_coal",
+  "G_13_heating_type/briquettes"
+)
+
+leccy_g13_undef <- c(
+  "G_13_heating_type/other",
+  "G_13_heating_type/dont_know",
+  "G_13_heating_type/prefer_not_to_answer"
+)
+
+#===
+
+leccy_g15_lvl2 <- c(
+  "intermittent_electricity",
+  "insufficient_electricity_in_terms_of_strength",
+  "other"
+)
+
+leccy_g15_lvl4 <- c(
+  "no_electricity"
+)
+
+leccy_g15_undef <- c(
+  "dont_know",
+  "prefer_not_to_answer"
+)
+
 snfi <- data.list$main %>%
   mutate(
     shelter_type = case_when(
@@ -204,9 +237,44 @@ snfi <- data.list$main %>%
       TRUE ~ -1
     ),
     # functional domestic space
-    leccy = case_when(),
-    utility = case_when(),
-    domestic = case_when(),
-    nfis = case_when()
+    g13_irr_cnt = rowSums(across(leccy_g13_irr, as.numeric),na.rm = TRUE),
+    g13_undef_cnt = rowSums(across(leccy_g13_undef, as.numeric),na.rm = TRUE),
+    leccy = case_when(
+      (
+        as.numeric(`G_13_heating_type/none`) == 1
+      ) ~ 4,
+      (
+        G_15_electricity_issues %in% leccy_g15_lvl4 &
+        g13_irr_cnt > 0
+      ) ~ 3,
+      (
+        G_15_electricity_issues %in% leccy_g15_lvl2 &
+        g13_irr_cnt > 0
+      ) ~ 2,
+      (
+        as.numeric(`G_13_heating_type/none`) == 1 &
+        g13_irr_cnt > 0
+      ) ~ 1,
+      TRUE ~ -1
+    ),
+    utility = case_when(
+      () ~ 3,
+      () ~ 2,
+      () ~ 1,
+      TRUE ~ -1
+    ),
+    domestic = case_when(
+      () ~ 4,
+      () ~ 3,
+      () ~ 2,
+      () ~ 1,
+      TRUE ~ -1
+    ),
+    nfis = case_when(
+      () ~ 3,
+      () ~ 2,
+      () ~ 1,
+      TRUE ~ -1
+    )
   ) %>%
   select(uuid, shelter_type, shelter_issues_1, shelter_issues_2, security_tenure)

@@ -52,6 +52,13 @@ main$lsg_livelihoods_v2 <- make_lsg(main,
                                                )
                                  )
 
+main$lsg_livelihoods_v3 <- make_lsg(main,
+                                    crit_to_4 = c("income_source",
+                                                  "income_quantity_v3",
+                                                  "coping"
+                                    )
+)
+
 # Health
 
 main$lsg_health <- make_lsg(main,
