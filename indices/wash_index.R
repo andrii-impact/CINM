@@ -111,7 +111,7 @@ crit_7_q3_level_4 <- c('H_9_enough_water/flushing_toilet','H_9_enough_water/none
 crit_7_q3_undef <- c('H_9_enough_water/dont_know','H_9_enough_water/prefer_not_to_answer')
 
 
-data$main <- data$main %>% 
+data.list$main <- data.list$main %>% 
   mutate(H_7_water_lack = as.numeric(H_7_water_lack)) %>% 
   mutate(
     wash_crit_1 = case_when(

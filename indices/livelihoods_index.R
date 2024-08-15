@@ -28,6 +28,7 @@ j27_undefined <- c(
 )
 
 median_inc <- 5865  #sic
+new_magic_number = 6471.4
 
 livelihoods <- data.list$main %>%
   mutate(
@@ -53,6 +54,11 @@ livelihoods <- data.list$main %>%
       is.na(total_inc_per_capita) | I_11_struggle_enough_money %in% c("dont_know", "prefer_not_to_answer") ~ NA,
       TRUE ~ -1
     ),
+    income_quantity_v2 = case_when(
+      as.numeric(total_inc_per_capita) <= new_magic_number ~ 3,
+      as.numeric(total_inc_per_capita) > new_magic_number ~ 1,
+      TRUE ~ NA
+    ),
     coping = case_when(
       lcsi_score == "Emergency" ~ 4,
       lcsi_score == "Crisis" ~ 3,
@@ -62,7 +68,7 @@ livelihoods <- data.list$main %>%
       TRUE ~ -1
     )
   ) %>% 
-  select(uuid, income_source, income_quantity, coping)
+  select(uuid, income_source, income_quantity, income_quantity_v2, coping)
 
 data.list$main <- data.list$main %>%
   left_join(livelihoods, by = "uuid")

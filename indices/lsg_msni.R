@@ -23,18 +23,31 @@ main$lsg_shelter_nfi <- make_lsg(main,
 
 
 main$lsg_wash <- make_lsg(main,
-                          crit_to_4plus = c("crit_wash_1",
-                                            "crit_wash_2",
-                                            "crit_wash_3"),
-                          crit_to_2 = "crit_wash_4")
+                          crit_to_4plus = c(
+                            "wash_crit_1",
+                            "wash_crit_2",
+                            "wash_crit_3",
+                            "wash_crit_4",
+                            "wash_crit_5",
+                            "wash_crit_6",
+                            "wash_crit_7"
+                            )
+                          )
 
 # Livelihoods
 
 
-
 main$lsg_livelihoods <- make_lsg(main,
+                                    crit_to_4 = c("income_source",
+                                                  "income_quantity",
+                                                  "coping"
+                                    )
+)
+
+
+main$lsg_livelihoods_v2 <- make_lsg(main,
                                  crit_to_4 = c("income_source",
-                                               "income_quantity",
+                                               "income_quantity_v2",
                                                "coping"
                                                )
                                  )

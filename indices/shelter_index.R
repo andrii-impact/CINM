@@ -202,6 +202,11 @@ snfi <- data.list$main %>%
         is.na(G_6_occupancy_arrang) | is.na(G_7_evict_risk)
       ) ~ NA,
       TRUE ~ -1
-    )
+    ),
+    # functional domestic space
+    leccy = case_when(),
+    utility = case_when(),
+    domestic = case_when(),
+    nfis = case_when()
   ) %>%
   select(uuid, shelter_type, shelter_issues_1, shelter_issues_2, security_tenure)
