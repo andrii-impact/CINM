@@ -5,3 +5,4 @@
 **/*.RData
 **/*.Rhistory
 **/output/*.xlsx
+*.xlsx
