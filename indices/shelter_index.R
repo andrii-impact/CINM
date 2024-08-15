@@ -98,6 +98,23 @@ shelter_issues_g10_undef <- c(
   "prefer_not_to_answer"
 )
 
+#=====
+
+security_tenure_g6_low <- c(
+  "owned_property",
+  "rented"
+)
+
+security_tenure_g6_high <- c(
+  "hosted_for_free",
+  "no_occupancy_agreement_squatting"
+)
+
+security_tenure_g6_undef <- c(
+  "dont_know",
+  "prefer_not_to_answer"
+)
+
 snfi <- data.list$main %>%
   mutate(
     shelter_type = case_when(
@@ -168,6 +185,23 @@ snfi <- data.list$main %>%
         (G_10_shelter_assess %in% shelter_issues_g10_lvl2)
       ) ~ 2,
       TRUE ~ -1
+    ),
+    security_tenure = case_when(
+      (G_6_occupancy_arrang %in% security_tenure_g6_high) ~ 3,
+      (
+        (G_6_occupancy_arrang %in% security_tenure_g6_low) &
+        (G_7_evict_risk == "yes")
+      ) ~ 2,
+      (
+        (G_6_occupancy_arrang %in% security_tenure_g6_low) &
+        (G_7_evict_risk == "no")
+      ) ~ 1,
+      (
+        (G_6_occupancy_arrang %in% security_tenure_g6_undef) |
+        (G_7_evict_risk %in% c("dont_know", "prefer_not_to_answer")) |
+        is.na(G_6_occupancy_arrang) | is.na(G_7_evict_risk)
+      ) ~ NA,
+      TRUE ~ -1
     )
   ) %>%
-  select(uuid, shelter_type, shelter_issues_1, shelter_issues_2)
+  select(uuid, shelter_type, shelter_issues_1, shelter_issues_2, security_tenure)
