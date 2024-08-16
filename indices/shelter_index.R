@@ -316,7 +316,7 @@ snfi <- data.list$main %>%
     g16_lvl2_cnt = rowSums(across(utility_g16_lvl2, as.numeric),na.rm = TRUE),
     g16_undef_cnt = rowSums(across(utility_g16_undef, as.numeric),na.rm = TRUE),
     utility = case_when(
-      (g16_lvl3_cnt > 0) ~ 3,
+      (g16_lvl3_cnt > 0) ~ NA,#3,
       (g16_lvl2_cnt > 0) ~ 2,
       (as.numeric(`G_16_utility_interrupt/none`) == 1) ~ 1,
       g16_undef_cnt > 0 | is.na(`G_16_utility_interrupt/none`) ~ NA,
