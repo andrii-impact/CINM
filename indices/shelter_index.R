@@ -151,12 +151,14 @@ leccy_g15_undef <- c(
 #===
 
 utility_g16_lvl3 <- c(
-  "G_16_utility_interrupt/gas",
-  "G_16_utility_interrupt/sewage",
+  # "G_16_utility_interrupt/gas",
+  # "G_16_utility_interrupt/sewage",
   "G_16_utility_interrupt/cold_water_supply"
 )
 
 utility_g16_lvl2 <- c(
+  "G_16_utility_interrupt/gas",
+  "G_16_utility_interrupt/sewage",
   "G_16_utility_interrupt/hot_water_supply",
   "G_16_utility_interrupt/internet"
 )
@@ -170,13 +172,15 @@ utility_g16_undef <- c(
 #===
 
 nfis_j25_lvl3 <- c(
-  "J_25_miss_nfi/winter_clothes_for_a_household_member",
-  "J_25_miss_nfi/bedding_and_towels",
+  #"J_25_miss_nfi/winter_clothes_for_a_household_member",
+  #"J_25_miss_nfi/bedding_and_towels",
   "J_25_miss_nfi/heating_appliances",
   "J_25_miss_nfi/fuel_for_heating"
 )
 
 nfis_j25_lvl2 <- c(
+  "J_25_miss_nfi/bedding_and_towels",
+  "J_25_miss_nfi/winter_clothes_for_a_household_member",
   "J_25_miss_nfi/household_items",
   "J_25_miss_nfi/summer_clothes_for_a_household_member",
   "J_25_miss_nfi/kitchen_set",
