@@ -80,6 +80,3 @@ livelihoods <- data.list$main %>%
 
 data.list$main <- data.list$main %>%
   left_join(livelihoods, by = "uuid")
-
-# livelihoods %>% View()
-# write_xlsx(livelihoods, path="livelihoods.xlsx")

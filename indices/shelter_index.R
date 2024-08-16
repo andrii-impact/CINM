@@ -148,6 +148,56 @@ leccy_g15_undef <- c(
   "prefer_not_to_answer"
 )
 
+#===
+
+utility_g16_lvl3 <- c(
+  "G_16_utility_interrupt/gas",
+  "G_16_utility_interrupt/sewage",
+  "G_16_utility_interrupt/cold_water_supply"
+)
+
+utility_g16_lvl2 <- c(
+  "G_16_utility_interrupt/hot_water_supply",
+  "G_16_utility_interrupt/internet"
+)
+
+utility_g16_undef <- c(
+  "G_16_utility_interrupt/other",
+  "G_16_utility_interrupt/dont_know",
+  "G_16_utility_interrupt/prefer_not_to_answer"
+)
+
+#===
+
+nfis_j25_lvl3 <- c(
+  "J_25_miss_nfi/winter_clothes_for_a_household_member",
+  "J_25_miss_nfi/bedding_and_towels",
+  "J_25_miss_nfi/heating_appliances",
+  "J_25_miss_nfi/fuel_for_heating"
+)
+
+nfis_j25_lvl2 <- c(
+  "J_25_miss_nfi/household_items",
+  "J_25_miss_nfi/summer_clothes_for_a_household_member",
+  "J_25_miss_nfi/kitchen_set",
+  "J_25_miss_nfi/large_kitchen_app",
+  "J_25_miss_nfi/other"
+)
+
+nfis_j25_irr <- c(
+  "J_25_miss_nfi/feminine_hygiene_items",
+  "J_25_miss_nfi/baby_diapers",
+  "J_25_miss_nfi/soap",
+  "J_25_miss_nfi/other_personal_hygiene_products",
+  "J_25_miss_nfi/domestic_hygiene_products",
+  "J_25_miss_nfi/water_treatment_product_and_materials"
+)
+
+nfis_j25_undef <- c(
+  "J_25_miss_nfi/dont_know",
+  "J_25_miss_nfi/prefer_not_to_answer"
+)
+
 snfi <- data.list$main %>%
   mutate(
     shelter_type = case_when(
@@ -252,29 +302,72 @@ snfi <- data.list$main %>%
         g13_irr_cnt > 0
       ) ~ 2,
       (
-        as.numeric(`G_13_heating_type/none`) == 1 &
+        G_15_electricity_issues == "none" &
         g13_irr_cnt > 0
+      ) ~ 1,
+      g13_undef_cnt > 0 | is.na(G_15_electricity_issues) | G_15_electricity_issues %in% leccy_g15_undef | uuid == "299771dc-a256-4c11-8867-bd028c8eb0f2" ~ NA,
+      TRUE ~ -1
+    ),
+    g16_lvl3_cnt = rowSums(across(utility_g16_lvl3, as.numeric),na.rm = TRUE),
+    g16_lvl2_cnt = rowSums(across(utility_g16_lvl2, as.numeric),na.rm = TRUE),
+    g16_undef_cnt = rowSums(across(utility_g16_undef, as.numeric),na.rm = TRUE),
+    utility = case_when(
+      (g16_lvl3_cnt > 0) ~ 3,
+      (g16_lvl2_cnt > 0) ~ 2,
+      (as.numeric(`G_16_utility_interrupt/none`) == 1) ~ 1,
+      g16_undef_cnt > 0 | is.na(`G_16_utility_interrupt/none`) ~ NA,
+      TRUE ~ -1
+    ),
+    g11_cunt = ifelse(G_11_cook_issues == "no_cannot_do", 1, 0),
+    g12_cunt = ifelse(G_12_sleep_issues == "no_cannot_do", 1, 0),
+    g14_cunt = ifelse(G_14_food_store_issues == "no_cannot_do", 1, 0),
+    g11_yi = ifelse(G_11_cook_issues == "yes_with_issues", 1, 0),
+    g12_yi = ifelse(G_12_sleep_issues == "yes_with_issues", 1, 0),
+    g14_yi = ifelse(G_14_food_store_issues == "yes_with_issues", 1, 0),
+    domestic = case_when(
+      (
+        (G_11_cook_issues %in% leccy_g15_undef | is.na(G_11_cook_issues))
+        | (G_12_sleep_issues %in% leccy_g15_undef | is.na(G_12_sleep_issues))
+        | (G_14_food_store_issues %in% leccy_g15_undef | is.na(G_14_food_store_issues))
+      ) ~ NA,
+      (
+        (g11_cunt + g12_cunt + g14_cunt) > 1
+      ) ~ 4,
+      (
+        (
+          (g11_yi + g12_yi + g14_yi) > 1
+        ) |
+        (
+          (g11_cunt + g12_cunt + g14_cunt) == 1
+        )
+      ) ~ 3,
+      (
+        (g11_yi + g12_yi + g14_yi) == 1
+      ) ~ 2,
+      (
+        (G_11_cook_issues %in% c("yes_without_any_issues", "no_do_not_need_to_cook_in_current_shelter")) &
+        (G_12_sleep_issues %in% c("yes_without_any_issues")) &
+        (G_14_food_store_issues %in% c("yes_without_any_issues"))
       ) ~ 1,
       TRUE ~ -1
     ),
-    utility = case_when(
-      () ~ 3,
-      () ~ 2,
-      () ~ 1,
-      TRUE ~ -1
-    ),
-    domestic = case_when(
-      () ~ 4,
-      () ~ 3,
-      () ~ 2,
-      () ~ 1,
-      TRUE ~ -1
-    ),
+    j25_lvl3_cnt = rowSums(across(nfis_j25_lvl3, as.numeric),na.rm = TRUE),
+    j25_lvl2_cnt = rowSums(across(nfis_j25_lvl2, as.numeric),na.rm = TRUE),
+    j25_irr_cnt = rowSums(across(nfis_j25_irr, as.numeric),na.rm = TRUE),
+    j25_undef_cnt = rowSums(across(nfis_j25_undef, as.numeric),na.rm = TRUE),
     nfis = case_when(
-      () ~ 3,
-      () ~ 2,
-      () ~ 1,
+      (j25_lvl3_cnt > 0) ~ 3,
+      (j25_lvl2_cnt > 0) ~ 2,
+      (
+        (as.numeric(`J_25_miss_nfi/none`) == 1) |
+        is.na(`J_25_miss_nfi/none`) |
+        (j25_irr_cnt > 0)
+      ) ~ 1,
+      j25_undef_cnt > 0 ~ NA,
       TRUE ~ -1
     )
   ) %>%
-  select(uuid, shelter_type, shelter_issues_1, shelter_issues_2, security_tenure)
+  select(uuid, shelter_type, shelter_issues_1, shelter_issues_2, security_tenure, leccy, utility, domestic, nfis)
+
+data.list$main <- data.list$main %>%
+  left_join(snfi, by = "uuid")

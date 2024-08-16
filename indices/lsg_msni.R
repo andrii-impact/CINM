@@ -4,37 +4,8 @@ main <- data.list$main
 
 
 
-main$lsg_education <- make_lsg(main,
-                               crit_to_4 = c("crit_education_1")) ##changed
 
-
-
-
-
-# Shelter/NFI
-
-main$lsg_shelter_nfi <- make_lsg(main,
-                                 crit_to_4plus = "crit_shelternfi_2",
-                                 crit_to_4 = c("crit_shelternfi_1",
-                                               "crit_shelternfi_3",
-                                               "crit_shelternfi_4"))
-
-# WASH
-
-
-main$lsg_wash <- make_lsg(main,
-                          crit_to_4plus = c(
-                            "wash_crit_1",
-                            "wash_crit_2",
-                            "wash_crit_3",
-                            "wash_crit_4",
-                            "wash_crit_5",
-                            "wash_crit_6",
-                            "wash_crit_7"
-                            )
-                          )
-
-# Livelihoods
+# Livelihoods (all) +
 
 
 main$lsg_livelihoods <- make_lsg(main,
@@ -47,9 +18,11 @@ main$lsg_livelihoods <- make_lsg(main,
 
 main$lsg_livelihoods_v2 <- make_lsg(main,
                                  crit_to_4 = c("income_source",
-                                               "income_quantity_v2",
                                                "coping"
-                                               )
+                                               ),
+                                 crit_to_3 = c(
+                                   "income_quantity_v2"
+                                 )
                                  )
 
 main$lsg_livelihoods_v3 <- make_lsg(main,
@@ -59,6 +32,60 @@ main$lsg_livelihoods_v3 <- make_lsg(main,
                                     )
 )
 
+
+
+
+# Education
+
+
+main$lsg_education <- make_lsg(main,
+                               crit_to_4 = c("crit_education_1")) ##changed
+
+
+
+
+# WASH +
+
+
+main$lsg_wash <- make_lsg(main,
+                          crit_to_4plus = c(
+                            "wash_crit_1",
+                            "wash_crit_2",
+                            "wash_crit_3"
+                          ),
+                          crit_to_4 = c(
+                            "wash_crit_4",
+                            "wash_crit_5",
+                            "wash_crit_6",
+                            "wash_crit_7"
+                          )
+)
+
+
+
+# Shelter/NFI +
+
+main$shelter_issues <- make_lsg(main,
+                                crit_to_4plus = c("shelter_issues_2"),
+                                crit_to_3 = c("shelter_issues_1")
+                                )
+main$lsg_shelter_nfi <- make_lsg(main,
+                                 crit_to_4plus = c(
+                                   "shelter_type",
+                                   "shelter_issues"
+                                 ),
+                                 crit_to_4 = c(
+                                   "leccy",
+                                   "domestic"
+                                 ),
+                                 crit_to_3 = c(
+                                   "security_tenure",
+                                   "utility",
+                                   "nfis"
+                                 )
+                                 )
+
+
 # Health
 
 main$lsg_health <- make_lsg(main,
@@ -66,12 +93,12 @@ main$lsg_health <- make_lsg(main,
 
 # Protection
 
-non_critical_protection <- c("non_crit_prot_1",
-                             "non_crit_prot_2",
-                             "non_crit_prot_3",
-                             "non_crit_prot_4")
-
-
+# non_critical_protection <- c("non_crit_prot_1",
+#                              "non_crit_prot_2",
+#                              "non_crit_prot_3",
+#                              "non_crit_prot_4")
+# 
+# 
 # we don't have non-critical this year
 # main <- main %>%
 #   mutate(noncrit_prot_total = case_when(is.na(non_crit_prot_1) | is.na(non_crit_prot_2) | 
@@ -108,6 +135,9 @@ col <- c("lsg_protection",
          "lsg_shelter_nfi",
          "lsg_education",
          "lsg_food_security")
+
+
+
 library(expss)
 main <- main %>%
   rowwise() %>% 
@@ -116,5 +146,3 @@ main <- main %>%
 
 data.list$main <- main
 cat("Finish Calculating LSGs and MSNI\n")
-
-
