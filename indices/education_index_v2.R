@@ -63,30 +63,6 @@ data.list$main <- data.list$main %>%
       educ_crit_1_var_3_undef > 0  | educ_crit_1_var_1_undef > 0 ~ NA_real_
     ),
     
-    educ_crit_2 = case_when(
-      
-      (educ_crit_1_var_3_lvl_2 > 0 & G_17_internet_hours == 'never_0hrs' &
-         fsl_lcsi_crisis3 %in% c('no_had_no_need','not_applicable')) |
-        fsl_lcsi_crisis3 %in% c('no_exhausted','yes') ~ 4,
-      
-      (child == educ_crit_1_var_3_lvl_1 & G_17_internet_hours %in% 'never_0hrs' &
-         fsl_lcsi_crisis3 %in% c('no_had_no_need','not_applicable'))|
-        (educ_crit_1_var_3_lvl_2 > 0 & G_17_internet_hours == 'sometimes_1_11hrs' &
-           fsl_lcsi_crisis3 %in% c('no_had_no_need','not_applicable')) ~ 3,
-      
-      (child == educ_crit_1_var_3_lvl_1 & G_17_internet_hours %in% 'sometimes_1_11hrs' &
-         fsl_lcsi_crisis3 %in% c('no_had_no_need','not_applicable')) |
-        (educ_crit_1_var_3_lvl_2 > 0 & G_17_internet_hours == 'often_12_23hrs' &
-           fsl_lcsi_crisis3 %in% c('no_had_no_need','not_applicable')) ~ 2,
-      
-      child == 0 | 
-        (child == educ_crit_1_var_3_lvl_1 & G_17_internet_hours == 'often_12_23hrs' &
-           fsl_lcsi_crisis3 %in% c('no_had_no_need','not_applicable')) |
-        G_17_internet_hours %in% 'always_24hrs' ~ 1,
-      
-      educ_crit_1_var_3_undef > 0  | 
-        G_17_internet_hours %in% c('dont_know','prefer_not_to_answer') ~ NA_real_),
-    
     educ_crit_3 = case_when(
       C_13_school_displ %in% 'yes' | C_14_school_damage %in% 'yes' |
         C_15_home_damage %in% 'yes' ~ 3,
@@ -96,10 +72,7 @@ data.list$main <- data.list$main %>%
       
       child == 0 |
         (C_13_school_displ %in% 'no' & C_14_school_damage %in% 'no' 
-         & C_15_home_damage %in% 'no' & C_12_2_school_missile %in% 'no') |
-        (child > 0 & educ_crit_1_var_3_lvl_2 ==0) |
-        (child > 0 & educ_crit_1_var_3_lvl_2 >= 1 & is.na(C_14_school_damage))|
-        (child > 0 & educ_crit_1_var_1_no > 0) ~ 1,
+         & C_15_home_damage %in% 'no' & C_12_2_school_missile %in% 'no') ~ 1,
       
       C_13_school_displ %in% c('dont_know','prefer_not_to_answer')|
         C_14_school_damage %in% c('dont_know','prefer_not_to_answer') |
@@ -107,8 +80,8 @@ data.list$main <- data.list$main %>%
         C_12_2_school_missile %in% c('dont_know','prefer_not_to_answer')|
         is.na(C_13_school_displ)|is.na(C_14_school_damage)|
         is.na(C_15_home_damage)|is.na(C_12_2_school_missile) ~ NA_real_
-    )) %>%
-  select(-all_of(names_to_drop))
-
+    )
+  ) %>% 
+  select(-all_of(names_to_drop)) 
 
 

@@ -1,3 +1,4 @@
+library(expss)
 cat("\nCalculating LSGs for each Sector using the make_lsg function ...\n")
 
 main <- data.list$main
@@ -35,15 +36,6 @@ main$lsg_livelihoods_v3 <- make_lsg(main,
 
 
 
-# Education
-
-
-main$lsg_education <- make_lsg(main,
-                               crit_to_4 = c("crit_education_1")) ##changed
-
-
-
-
 # WASH +
 
 
@@ -60,6 +52,54 @@ main$lsg_wash <- make_lsg(main,
                             "wash_crit_7"
                           )
 )
+
+
+
+
+
+# WASH 2 +
+
+
+main$lsg_wash_v2 <- make_lsg(main,
+                             crit_to_4plus = c(
+                               "wash_crit_1",
+                               "wash_crit_2",
+                               "wash_crit_3"
+                             ),
+                             crit_to_4 = c(
+                               "wash_crit_4",
+                               "wash_crit_5",
+                               "wash_crit_7"
+                             )
+)
+
+
+# Education
+
+
+main$lsg_education <- make_lsg(main,
+                               crit_to_4 = c(
+                                 "educ_crit_1",
+                                 "educ_crit_2"
+                                 ),
+                               crit_to_3 = c(
+                                 "educ_crit_3"
+                               )
+)
+
+
+# Education 2
+
+
+main$lsg_education_v2 <- make_lsg(main,
+                               crit_to_4 = c(
+                                 "educ_crit_1"),
+                               crit_to_3 = c(
+                                 "educ_crit_3"
+                               )
+)
+
+
 
 
 
@@ -86,63 +126,88 @@ main$lsg_shelter_nfi <- make_lsg(main,
                                  )
 
 
+
+
+
 # Health
 
 main$lsg_health <- make_lsg(main,
-                            crit_to_4 = c("crit_health_1"))
+                            crit_to_4 = c(
+                              "health_crit_1",
+                              "health_crit_3",
+                              "health_crit_5"
+                              ),
+                            crit_to_3 = c(
+                              "health_crit_2",
+                              "health_crit_4",
+                              "health_crit_6"
+                            )
+                            )
+
+
+
 
 # Protection
 
-# non_critical_protection <- c("non_crit_prot_1",
-#                              "non_crit_prot_2",
-#                              "non_crit_prot_3",
-#                              "non_crit_prot_4")
-# 
-# 
-# we don't have non-critical this year
-# main <- main %>%
-#   mutate(noncrit_prot_total = case_when(is.na(non_crit_prot_1) | is.na(non_crit_prot_2) | 
-#                                           is.na(non_crit_prot_3) | is.na(non_crit_prot_4)  ~ NA_real_,
-#                                         rowSums(across(non_critical_protection, .fns = as.numeric), na.rm =T)/4 >= 0.66 ~ 3,
-#                                         rowSums(across(non_critical_protection, .fns = as.numeric), na.rm =T)/4 >= 0.33 ~ 2,
-#                                         rowSums(across(non_critical_protection, .fns = as.numeric), na.rm =T)/4 >= 0 ~ 1,
-#                                         TRUE ~ NA_real_))
-# 
-# main$lsg_protection <- make_lsg(main,
-#                                 crit_to_4plus = c("crit_prot_3"),
-#                                 crit_to_4 = c("crit_prot_1"),
-#                                 crit_to_3 = c('crit_prot_2','crit_prot_4'),
-#                                 non_crit = "noncrit_prot_total")
+
+
+main$lsg_protection <- make_lsg(main,
+                                crit_to_4plus = c("safety"),
+                                crit_to_3 = c("barriers")
+)
+
+
 
 
 ## Food Security
-food_security <- readxl::read_excel("resources/MSNA23_clean_with_CARI_230829_1.xlsx", col_types = "text") %>% 
-  select(uuid,cari_lvl,CARI_current_status, ec_vulnerability, coping_strategy) %>% 
-  rename(lsg_food_security = "cari_lvl")
-
-food_security$lsg_food_security <- factor(food_security$lsg_food_security, levels = c('Food secure','Marginally food secure',
-                                                                                      'Moderately food insecure','Severely food insecure'), ordered = T)
-
-main <- main %>% 
-  left_join(food_security, by = "uuid") %>% 
-  mutate(lsg_food_security = as.numeric(lsg_food_security))
-
-
-col <- c("lsg_protection",
-         "lsg_health",
-         "lsg_livelihoods",
-         "lsg_wash",
-         "lsg_shelter_nfi",
-         "lsg_education",
-         "lsg_food_security")
+food_security <- readxl::read_excel("resources/MSNA_data_2024.xlsx", col_types = "text") %>%
+  select(uuid, `CARI classification (using adj rCSI ECMEN FS)`) %>%
+  mutate(
+    x = `CARI classification (using adj rCSI ECMEN FS)`,
+    lsg_food_security = case_when(
+      x == "Food secure" ~ 1,
+      x == "Marginally food secure" ~ 2,
+      x == "Moderately food insecure" ~ 3,
+      x == "Severely food insecure" ~ 4,
+      TRUE ~ NA
+    )
+  ) %>%
+  select(uuid, lsg_food_security)
 
 
 
-library(expss)
 main <- main %>%
-  rowwise() %>% 
-  mutate(MSNI = max(across(col), na.rm = T)) %>% 
-  ungroup()
+  left_join(food_security, by = "uuid")
+
+
+
+
+
+col <- c(
+  "lsg_protection",
+  "lsg_health",
+  "lsg_livelihoods_v3",
+  "lsg_wash_v2",
+  "lsg_shelter_nfi",
+  "lsg_education",
+  "lsg_food_security"
+  )
+
+
+
+main <- main %>%
+  mutate(
+    CCIA = max(
+      as.integer(as.character(col[1])), 
+      as.integer(as.character(col[2])), 
+      as.integer(as.character(col[3])), 
+      as.integer(as.character(col[4])), 
+      as.integer(as.character(col[5])), 
+      as.integer(as.character(col[6])),
+      as.integer(as.character(col[7])),
+      na.rm = TRUE
+    )
+  )
 
 data.list$main <- main
-cat("Finish Calculating LSGs and MSNI\n")
+cat("Finish Calculating LSGs and CINM\n")
