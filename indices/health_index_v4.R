@@ -1,9 +1,14 @@
 
 health_crit_1_var_3_lvl_1_ls <- c('preventative_consultation_check_up')
-health_crit_1_var_3_lvl_2_ls <- c("consultation_or_drugs_for_acute_illness", "consultation_or_drugs_for_chronic_illness",
+health_crit_1_var_3_lvl_2_ls <- c("consultation_or_drugs_for_chronic_illness",
                                   "consultation_or_drugs_for_other_illnesses",'elective_non_life_saving_surgery',
-                                  "antenatal_or_post_natal_services", "safe_delivery_services", 
+                                  "antenatal_or_post_natal_services", 
                                   "other")
+
+health_crit_1_var_3_lvl_2_delivery <- c("safe_delivery_services",'consultation_or_drugs_for_acute_illness')
+
+
+
 health_crit_1_var_3_lvl_3_ls <- c("trauma_care","emergency_life_saving_surgery")
 
 health_crit_1_var_3_undef_ls <- c("dont_know", "prefer_not_to_answer")
@@ -47,7 +52,7 @@ health_crit_5_var_1_lvl_4 <- c('D_12_medicines_barriers/security_concerns',
 
 
 
-health_data_prel <- data.list$hh_members %>% 
+health_data_prel <- data.list$loop_demographics %>% 
   mutate(
     member = 1,
     health_crit_1_var_1_need = ifelse(D_3_health_need  %in% 'yes',1,0),
@@ -64,6 +69,8 @@ health_data_prel <- data.list$hh_members %>%
       grepl(paste0('(',paste0(health_crit_1_var_3_lvl_1_ls, collapse = ')|('),')'), D_4_health_service_type),1,0),
     health_crit_1_var_3_lvl_2 = ifelse(
       grepl(paste0('(',paste0(health_crit_1_var_3_lvl_2_ls, collapse = ')|('),')'), D_4_health_service_type),1,0),
+    health_crit_1_var_3_lvl_2_delv = ifelse(
+      grepl(paste0('(',paste0(health_crit_1_var_3_lvl_2_delivery, collapse = ')|('),')'), D_4_health_service_type),1,0),
     health_crit_1_var_3_lvl_3 = ifelse(
       grepl(paste0('(',paste0(health_crit_1_var_3_lvl_3_ls, collapse = ')|('),')'), D_4_health_service_type),1,0),
     health_crit_1_var_3_undef = ifelse(
@@ -73,11 +80,13 @@ health_data_prel <- data.list$hh_members %>%
     # we need a combo of having a level of a need and obtaining it 
     health_crit_1_var_3_lvl_1_obtained = health_crit_1_var_3_lvl_1*health_crit_1_var_2_obtained,
     health_crit_1_var_3_lvl_2_obtained = health_crit_1_var_3_lvl_2*health_crit_1_var_2_obtained,
+    health_crit_1_var_3_lvl_2_delv_obtained = health_crit_1_var_3_lvl_2_delv*health_crit_1_var_2_obtained,
     health_crit_1_var_3_lvl_3_obtained = health_crit_1_var_3_lvl_3*health_crit_1_var_2_obtained,
     
     # same with non obtaining
     health_crit_1_var_3_lvl_1_nonobtained = health_crit_1_var_3_lvl_1*health_crit_1_var_2_notobtained,
     health_crit_1_var_3_lvl_2_nonobtained = health_crit_1_var_3_lvl_2*health_crit_1_var_2_notobtained,
+    health_crit_1_var_3_lvl_2_delv_nonobtained = health_crit_1_var_3_lvl_2_delv*health_crit_1_var_2_notobtained,
     health_crit_1_var_3_lvl_3_nonobtained = health_crit_1_var_3_lvl_3*health_crit_1_var_2_notobtained,
     
     
@@ -97,17 +106,21 @@ data.list$main <- data.list$main %>%
   left_join(health_data_prel) %>% 
   mutate(
     health_crit_1 = case_when(
-      health_crit_1_var_3_lvl_3_nonobtained>0 ~ 4,
+      health_crit_1_var_3_lvl_3_nonobtained>0 ~ 5,
+      
+      health_crit_1_var_3_lvl_2_delv_nonobtained>0 ~ 4,
+      
       
       (health_crit_1_var_3_lvl_2_nonobtained >0) |
         (health_crit_1_var_3_lvl_3_obtained>0) ~ 3,
       
       (health_crit_1_var_3_lvl_1 >0) |
-        (health_crit_1_var_3_lvl_2_obtained>0) ~ 2,
+        (health_crit_1_var_3_lvl_2_obtained>0 |
+           health_crit_1_var_3_lvl_2_delv_obtained >0) ~ 2,
       
       health_crit_1_var_1_noneed == member | (
         health_crit_1_var_1_need >0 &
-          health_crit_1_var_1_need == health_crit_1_var_3_lvl_1) ~1,
+          health_crit_1_var_3_lvl_1_obtained == member) ~1,
       
       health_crit_1_var_1_undef>0 | health_crit_1_var_2_undef> 0 | health_crit_1_var_3_undef >0 ~ NA_real_
     ),
@@ -154,7 +167,6 @@ data.list$main <- data.list$main %>%
       is.na(D_7_medicines_sought) | is.na(D_9_medicines_type) |
         rowSums(across(all_of(health_crit_var_3_undef) , .fns = as.numeric), na.rm = T)>0 ~ NA_real_
     ),
-    
     D_2_health_trasport_length = as.numeric(D_2_health_trasport_length),
     
     health_crit_4 = case_when(
@@ -179,21 +191,29 @@ data.list$main <- data.list$main %>%
     ),
     
     health_crit_6 = case_when(
-      D_15_felt_stressed  %in% 'yes' & D_16_depressed_mood %in% 'yes' &  D_17_anxious  %in% 'yes' ~ 3,
+      (rowSums(across(all_of(c('D_15_felt_stressed','D_16_depressed_mood','D_17_anxious')), ~ .x %in% 'yes')) >0 &
+         (K_2_first %in% 'household_members_feeling_very_distressed_upset_sad_worried_scared_or_angry' |
+         K_2_second %in% 'household_members_feeling_very_distressed_upset_sad_worried_scared_or_angry' |
+         K_2_third %in% 'household_members_feeling_very_distressed_upset_sad_worried_scared_or_angry')
+      ) ~ 3,
       
-      rowSums(across(all_of(c('D_15_felt_stressed','D_16_depressed_mood','D_17_anxious')), 
-                     ~ .x %in% 'yes')) <=2 ~ 2,
       
-      D_15_felt_stressed  %in% 'no' & D_16_depressed_mood %in% 'no' &  D_17_anxious  %in% 'no' ~ 1,
+      (D_15_felt_stressed  %in% 'no' & D_16_depressed_mood %in% 'no' &  D_17_anxious  %in% 'no') |
+        (rowSums(across(all_of(c('D_15_felt_stressed','D_16_depressed_mood','D_17_anxious')), ~ .x %in% 'yes')) >0 &
+           ! K_2_first %in% 'household_members_feeling_very_distressed_upset_sad_worried_scared_or_angry' &
+           ! K_2_second %in% 'household_members_feeling_very_distressed_upset_sad_worried_scared_or_angry' &
+           ! K_2_third %in% 'household_members_feeling_very_distressed_upset_sad_worried_scared_or_angry'
+           ) ~ 1,
       
       D_15_felt_stressed  %in% c('prefer_not_to_answer','dont_know') |
         D_16_depressed_mood %in% c('prefer_not_to_answer','dont_know') | 
         D_17_anxious  %in% c('prefer_not_to_answer','dont_know') |
-        is.na(D_15_felt_stressed) | is.na(D_16_depressed_mood) | is.na(D_17_anxious) ~ NA_real_
-    )
+        is.na(D_15_felt_stressed) | is.na(D_16_depressed_mood) | is.na(D_17_anxious) ~ NA_real_)
   ) %>% 
   select(-names_to_drop)
-
-
-
-
+  
+  
+  
+  
+  
+  

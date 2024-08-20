@@ -43,8 +43,7 @@ names_to_drop <- setdiff(names(educ_data_prel),'uuid')
 
 
 
-# data.listdata.list$main <- 
-data.list$main %>% 
+data.list$main <- data.list$main %>%
   left_join(educ_data_prel) %>% 
   mutate(
     educ_crit_1 = case_when(

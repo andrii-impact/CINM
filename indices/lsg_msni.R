@@ -191,6 +191,23 @@ main$lsg_health_v2 <- make_lsg(main,
 )
 
 
+# Health 4
+
+main$lsg_health_v4 <- make_lsg(main,
+                               crit_to_4plus = c(
+                                 "health_crit_1"
+                               ),
+                               crit_to_4 = c(
+                                 "health_crit_3",
+                                 "health_crit_5"
+                               ),
+                               crit_to_3 = c(
+                                 "health_crit_2",
+                                 #"health_crit_4",
+                                 "health_crit_6"
+                               )
+                      )
+
 
 
 # Protection

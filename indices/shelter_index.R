@@ -174,15 +174,15 @@ utility_g16_undef <- c(
 #===
 
 nfis_j25_lvl3 <- c(
-  #"J_25_miss_nfi/winter_clothes_for_a_household_member",
-  #"J_25_miss_nfi/bedding_and_towels",
+  "J_25_miss_nfi/winter_clothes_for_a_household_member",
+  "J_25_miss_nfi/bedding_and_towels",
   "J_25_miss_nfi/heating_appliances",
   "J_25_miss_nfi/fuel_for_heating"
 )
 
 nfis_j25_lvl2 <- c(
-  "J_25_miss_nfi/bedding_and_towels",
-  "J_25_miss_nfi/winter_clothes_for_a_household_member",
+  #"J_25_miss_nfi/bedding_and_towels",
+  #"J_25_miss_nfi/winter_clothes_for_a_household_member",
   "J_25_miss_nfi/household_items",
   "J_25_miss_nfi/summer_clothes_for_a_household_member",
   "J_25_miss_nfi/kitchen_set",

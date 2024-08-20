@@ -47,7 +47,11 @@ health_crit_5_var_1_lvl_4 <- c('D_12_medicines_barriers/security_concerns',
 
 
 
+<<<<<<< HEAD
 health_data_prel <- data.list$loop_demographics %>% 
+=======
+health_data_prel <- data.list$hh_members %>% 
+>>>>>>> 12808258a861d7c46e35296c45eba3fd774a75a2
   mutate(
     member = 1,
     health_crit_1_var_1_need = ifelse(D_3_health_need  %in% 'yes',1,0),
@@ -155,6 +159,7 @@ data.list$main <- data.list$main %>%
         rowSums(across(all_of(health_crit_var_3_undef) , .fns = as.numeric), na.rm = T)>0 ~ NA_real_
     ),
     
+<<<<<<< HEAD
     D_2_health_trasport_length = as.numeric(D_2_health_trasport_length),
     
     # health_crit_4 = case_when(
@@ -164,6 +169,8 @@ data.list$main <- data.list$main %>%
     #   is.na(D_2_health_trasport_length)~ NA_real_
     # ),
     
+=======
+>>>>>>> 12808258a861d7c46e35296c45eba3fd774a75a2
     health_crit_5 = case_when(
       rowSums(across(all_of(health_crit_5_var_1_lvl_4) , .fns = as.numeric), na.rm = T)>0 ~ 4, 
       
@@ -176,6 +183,7 @@ data.list$main <- data.list$main %>%
       
       rowSums(across(all_of(health_crit_5_var_1_lvl_1) , .fns = as.numeric), na.rm = T)>0 |
         is.na(D_12_medicines_barriers) ~ 1
+<<<<<<< HEAD
     )#,
     
     # health_crit_6 = case_when(
@@ -189,6 +197,9 @@ data.list$main <- data.list$main %>%
     #     D_17_anxious  %in% c('prefer_not_to_answer','dont_know') |
     #     is.na(D_15_felt_stressed) | is.na(D_16_depressed_mood) | is.na(D_17_anxious) ~ NA_real_
     # )
+=======
+    )
+>>>>>>> 12808258a861d7c46e35296c45eba3fd774a75a2
   ) %>% 
   select(-names_to_drop)
 

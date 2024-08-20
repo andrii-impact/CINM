@@ -2,15 +2,15 @@ library(writexl)
 
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(tidyverse, readxl, writexl, openxlsx, randomcoloR, sf, anytime, DT,
-               cluster, survey, srvyr, knitr, webshot, docstring, tcltk, scales)
+               cluster, survey, srvyr, knitr, webshot, docstring, tcltk, scales, utilityR)
+library(utilityR)
 
-
-source("src/utils/utils_analysis.R")
-source("src/utils/misc_utils.R")
-source("src/utils/utils_descriptive_analysis.R")
-source("src/utils/kobo_utils.R")
-source("src/utils/check_kobo.R")
-source("src/utils/tabular_analysis_utils.R")
+# source("src/utils/utils_analysis.R")
+# source("src/utils/misc_utils.R")
+# source("src/utils/utils_descriptive_analysis.R")
+# source("src/utils/kobo_utils.R")
+# source("src/utils/check_kobo.R")
+# source("src/utils/tabular_analysis_utils.R")
 
 na_max <- function(x){ifelse( !all(is.na(x)), max(x, na.rm=T), NA)}
 na_min <- function(x){ifelse( !all(is.na(x)), min(x, na.rm=T), NA)}
@@ -32,3 +32,6 @@ data.list <- list("main" = read_excel(strings['filename.data'], sheet=1, col_typ
 
 for(sheet in sheet_names[-1])
   data.list[[sheet]] <- read_excel(strings['filename.data'], sheet=sheet, col_types = "text")
+
+tool_choices <- load.tool.choices('resources/MSNA_2024_Kobo_tool_F2F.xlsx','label::English')
+tool_survey <- load.tool.survey('resources/MSNA_2024_Kobo_tool_F2F.xlsx','label::English')

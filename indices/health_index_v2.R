@@ -47,7 +47,11 @@ health_crit_5_var_1_lvl_4 <- c('D_12_medicines_barriers/security_concerns',
 
 
 
+<<<<<<< HEAD
 health_data_prel <- data.list$loop_demographics %>% 
+=======
+health_data_prel <- data.list$hh_members %>% 
+>>>>>>> 12808258a861d7c46e35296c45eba3fd774a75a2
   mutate(
     member = 1,
     health_crit_1_var_1_need = ifelse(D_3_health_need  %in% 'yes',1,0),
@@ -176,6 +180,7 @@ data.list$main <- data.list$main %>%
       
       rowSums(across(all_of(health_crit_5_var_1_lvl_1) , .fns = as.numeric), na.rm = T)>0 |
         is.na(D_12_medicines_barriers) ~ 1
+<<<<<<< HEAD
     )#,
     
     # health_crit_6 = case_when(
@@ -191,6 +196,11 @@ data.list$main <- data.list$main %>%
     # )
   ) #%>% 
   # select(-names_to_drop)
+=======
+    )
+  ) %>% 
+  select(-names_to_drop)
+>>>>>>> 12808258a861d7c46e35296c45eba3fd774a75a2
 
 
 
