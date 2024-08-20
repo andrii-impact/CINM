@@ -10,7 +10,7 @@ crit_1_q2_level_4 <- c('protection_risks_while_at_or_traveling_to_the_school','m
 
 
 
-educ_data_prel <- data.list$loop_demographics %>% 
+educ_data_prel <- data$loop_demographics %>% 
   mutate(
     child = ifelse(between(as.numeric(B_5_hh_mem_age), 5,18),1,0),
     
@@ -44,10 +44,13 @@ names_to_drop <- setdiff(names(educ_data_prel),'uuid')
 
 
 
-data.list$main <- data.list$main %>% 
+data$main <- data$main %>% 
   left_join(educ_data_prel) %>% 
   mutate(
     educ_crit_1 = case_when(
+      
+      child == 0 ~ 1,
+      
       (educ_crit_1_var_1_no >0 & educ_crit_1_var_2_lvl_4_var_1_no>0) ~ 4,
       
       (educ_crit_1_var_1_no >0 & educ_crit_1_var_2_lvl_3_var_1_no>0 & educ_crit_1_var_2_lvl_4 ==0) ~ 3,
@@ -64,6 +67,7 @@ data.list$main <- data.list$main %>%
     ),
     
     educ_crit_2 = case_when(
+      child == 0 ~ 1,
       
       (educ_crit_1_var_3_lvl_2 > 0 & G_17_internet_hours == 'never_0hrs' &
          fsl_lcsi_crisis3 %in% c('no_had_no_need','not_applicable')) |
@@ -88,6 +92,8 @@ data.list$main <- data.list$main %>%
         G_17_internet_hours %in% c('dont_know','prefer_not_to_answer') ~ NA_real_),
     
     educ_crit_3 = case_when(
+      child == 0 ~ 1,
+      
       C_13_school_displ %in% 'yes' | C_14_school_damage %in% 'yes' |
         C_15_home_damage %in% 'yes' ~ 3,
       
@@ -109,6 +115,5 @@ data.list$main <- data.list$main %>%
         is.na(C_15_home_damage)|is.na(C_12_2_school_missile) ~ NA_real_
     )) %>%
   select(-all_of(names_to_drop))
-
 
 

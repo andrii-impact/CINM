@@ -1,0 +1,197 @@
+
+health_crit_1_var_3_lvl_1_ls <- c('preventative_consultation_check_up')
+health_crit_1_var_3_lvl_2_ls <- c("consultation_or_drugs_for_acute_illness", "consultation_or_drugs_for_chronic_illness",
+                                  "consultation_or_drugs_for_other_illnesses",'elective_non_life_saving_surgery',
+                                  "antenatal_or_post_natal_services", "safe_delivery_services", 
+                                  "other")
+health_crit_1_var_3_lvl_3_ls <- c("trauma_care","emergency_life_saving_surgery")
+
+health_crit_1_var_3_undef_ls <- c("dont_know", "prefer_not_to_answer")
+
+
+# crit 3
+
+health_crit_var_3_lvl_1 <- c("D_9_medicines_type/medicines_for_allergies", "D_9_medicines_type/medicines_for_birth_control")
+
+health_crit_var_3_lvl_2 <- c("D_9_medicines_type/medicines_to_regulate_blood_sugar", "D_9_medicines_type/medicines_for_high_blood_pressure",
+                             'D_9_medicines_type/medicines_for_thyroid_problems','D_9_medicines_type/other')
+
+health_crit_var_3_lvl_3 <- c("D_9_medicines_type/medicines_for_mental_health_conditions", "D_9_medicines_type/medicines_for_infections",
+                             'D_9_medicines_type/medicines_for_pain')
+
+health_crit_var_3_lvl_4 <- c("D_9_medicines_type/medicines_to_prevent_or_treat_cancer", "D_9_medicines_type/medicines_to_prevent_or_treat_heart_problems",
+                             'D_9_medicines_type/medicines_for_longterm_lung_problems','D_9_medicines_type/medicines_for_the_neurologicnervous_system_diseases')
+
+health_crit_var_3_undef <- c("D_9_medicines_type/dont_know", "D_9_medicines_type/prefer_not_to_answer")
+
+
+# crit 5
+
+health_crit_5_var_1_lvl_1 <- c('D_12_medicines_barriers/none','D_12_medicines_barriers/time_necessary_to_access_the_services__access_medicine')
+
+health_crit_5_var_1_lvl_2 <- c('D_12_medicines_barriers/transport_necessary_get_to_services_access_medicine',
+                               'D_12_medicines_barriers/other',
+                               'D_12_medicines_barriers/dont_know',
+                               'D_12_medicines_barriers/prefer_not_to_answer')
+
+health_crit_5_var_1_lvl_3 <- c('D_12_medicines_barriers/cost_of_medicine',
+                               'D_12_medicines_barriers/cost_of_treatment',
+                               'D_12_medicines_barriers/need_for_unofficial_payments',
+                               'D_12_medicines_barriers/needed_services_medicine_were_not_available')
+
+health_crit_5_var_1_lvl_4 <- c('D_12_medicines_barriers/security_concerns',
+                               'D_12_medicines_barriers/not_have_needed_documents',
+                               'D_12_medicines_barriers/lack_of_medical_facilities_facilities_difficult_to_access',
+                               'D_12_medicines_barriers/lack_of_pharmacies_pharmacies_difficult_to_access',
+                               'D_12_medicines_barriers/refusal_to_provide_service_medicine')
+
+
+
+health_data_prel <- data.list$loop_demographics %>% 
+  mutate(
+    member = 1,
+    health_crit_1_var_1_need = ifelse(D_3_health_need  %in% 'yes',1,0),
+    health_crit_1_var_1_noneed = ifelse(D_3_health_need %in% 'no',1,0),
+    health_crit_1_var_1_undef = ifelse(D_3_health_need %in% c('dont_know','prefer_not_to_answer')|
+                                         is.na(D_3_health_need), 1,0),
+    
+    health_crit_1_var_2_obtained = ifelse(D_5_obtained_healthcare %in% 'yes',1,0),
+    health_crit_1_var_2_notobtained = ifelse(D_5_obtained_healthcare %in% 'no',1,0),
+    health_crit_1_var_2_undef = ifelse(D_5_obtained_healthcare %in% c('dont_know','prefer_not_to_answer')|
+                                         is.na(D_3_health_need), 1,0),
+    
+    health_crit_1_var_3_lvl_1 = ifelse(
+      grepl(paste0('(',paste0(health_crit_1_var_3_lvl_1_ls, collapse = ')|('),')'), D_4_health_service_type),1,0),
+    health_crit_1_var_3_lvl_2 = ifelse(
+      grepl(paste0('(',paste0(health_crit_1_var_3_lvl_2_ls, collapse = ')|('),')'), D_4_health_service_type),1,0),
+    health_crit_1_var_3_lvl_3 = ifelse(
+      grepl(paste0('(',paste0(health_crit_1_var_3_lvl_3_ls, collapse = ')|('),')'), D_4_health_service_type),1,0),
+    health_crit_1_var_3_undef = ifelse(
+      grepl(paste0('(',paste0(health_crit_1_var_3_undef_ls, collapse = ')|('),')'), D_4_health_service_type) |
+        is.na(D_4_health_service_type),1,0),
+    
+    # we need a combo of having a level of a need and obtaining it 
+    health_crit_1_var_3_lvl_1_obtained = health_crit_1_var_3_lvl_1*health_crit_1_var_2_obtained,
+    health_crit_1_var_3_lvl_2_obtained = health_crit_1_var_3_lvl_2*health_crit_1_var_2_obtained,
+    health_crit_1_var_3_lvl_3_obtained = health_crit_1_var_3_lvl_3*health_crit_1_var_2_obtained,
+    
+    # same with non obtaining
+    health_crit_1_var_3_lvl_1_nonobtained = health_crit_1_var_3_lvl_1*health_crit_1_var_2_notobtained,
+    health_crit_1_var_3_lvl_2_nonobtained = health_crit_1_var_3_lvl_2*health_crit_1_var_2_notobtained,
+    health_crit_1_var_3_lvl_3_nonobtained = health_crit_1_var_3_lvl_3*health_crit_1_var_2_notobtained,
+    
+    
+  ) %>% 
+  select(uuid, member,starts_with('health_crit')) %>% 
+  group_by(uuid) %>% 
+  summarise(
+    member = sum(member, na.rm = TRUE),
+    across(starts_with('health_crit_1'), sum)) %>% 
+  ungroup()
+
+
+names_to_drop <- setdiff(names(health_data_prel),'uuid')
+
+
+data.list$main <- data.list$main %>% 
+  left_join(health_data_prel) %>% 
+  mutate(
+    health_crit_1 = case_when(
+      health_crit_1_var_3_lvl_3_nonobtained>0 ~ 4,
+      
+      (health_crit_1_var_3_lvl_2_nonobtained >0) |
+        (health_crit_1_var_3_lvl_3_obtained>0) ~ 3,
+      
+      (health_crit_1_var_3_lvl_1 >0) |
+        (health_crit_1_var_3_lvl_2_obtained>0) ~ 2,
+      
+      health_crit_1_var_1_noneed == member | (
+        health_crit_1_var_1_need >0 &
+          health_crit_1_var_1_need == health_crit_1_var_3_lvl_1) ~1,
+      
+      health_crit_1_var_1_undef>0 | health_crit_1_var_2_undef> 0 | health_crit_1_var_3_undef >0 ~ NA_real_
+    ),
+    
+    
+    health_crit_2 = case_when(
+      B_15_wgss_seeing %in% 'none'& B_16_wgss_hearing %in% 'none' &
+        B_17_wgss_walking %in% 'none' & B_18_wgss_cognit %in% 'none' &
+        B_19_wgss_selfcare %in% 'none'& B_20_wgss_comm %in% 'none' ~ 1,
+      
+      B_15_wgss_seeing %in% 'some_difficulty'| B_16_wgss_hearing %in% 'some_difficulty' |
+        B_17_wgss_walking %in% 'some_difficulty' | B_18_wgss_cognit %in% 'some_difficulty' |
+        B_19_wgss_selfcare %in% 'some_difficulty'| B_20_wgss_comm %in% 'some_difficulty' ~ 2,
+      
+      B_15_wgss_seeing %in% c('a_lot_of_difficulty','cannot_do_at_all')| 
+        B_16_wgss_hearing %in% c('a_lot_of_difficulty','cannot_do_at_all') |
+        B_17_wgss_walking %in% c('a_lot_of_difficulty','cannot_do_at_all') |
+        B_18_wgss_cognit %in% c('a_lot_of_difficulty','cannot_do_at_all') |
+        B_19_wgss_selfcare %in% c('a_lot_of_difficulty','cannot_do_at_all')|
+        B_20_wgss_comm %in% c('a_lot_of_difficulty','cannot_do_at_all') ~ 3,
+      
+      B_15_wgss_seeing %in% c('dont_know','prefer_not_to_answer')| 
+        B_16_wgss_hearing %in% c('dont_know','prefer_not_to_answer') |
+        B_17_wgss_walking %in% c('dont_know','prefer_not_to_answer') |
+        B_18_wgss_cognit %in% c('dont_know','prefer_not_to_answer') |
+        B_19_wgss_selfcare %in% c('dont_know','prefer_not_to_answer')|
+        B_20_wgss_comm %in% c('dont_know','prefer_not_to_answer') ~ NA_real_
+    ),
+    
+    health_crit_3 = case_when(
+      rowSums(across(all_of(health_crit_var_3_lvl_4) , .fns = as.numeric), na.rm = T)>0 ~ 4,
+      
+      rowSums(across(all_of(health_crit_var_3_lvl_3) , .fns = as.numeric), na.rm = T)>0 &
+        rowSums(across(all_of(health_crit_var_3_lvl_4) , .fns = as.numeric), na.rm = T)==0 ~ 3,
+      
+      rowSums(across(all_of(health_crit_var_3_lvl_2) , .fns = as.numeric), na.rm = T)>0 &
+        rowSums(across(all_of(health_crit_var_3_lvl_3) , .fns = as.numeric), na.rm = T)==0 &
+        rowSums(across(all_of(health_crit_var_3_lvl_4) , .fns = as.numeric), na.rm = T)==0 ~ 2,
+      
+      D_7_medicines_sought %in% 'no' |
+        (D_7_medicines_sought %in% 'yes' & D_8_medicinces_obtained  %in% 'yes')|
+        rowSums(across(all_of(health_crit_var_3_lvl_1) , .fns = as.numeric), na.rm = T)>0 ~ 1,
+      
+      is.na(D_7_medicines_sought) | is.na(D_9_medicines_type) |
+        rowSums(across(all_of(health_crit_var_3_undef) , .fns = as.numeric), na.rm = T)>0 ~ NA_real_
+    ),
+    
+    D_2_health_trasport_length = as.numeric(D_2_health_trasport_length),
+    
+    health_crit_4 = case_when(
+      D_2_health_trasport_length>45 ~ 3,
+      between(D_2_health_trasport_length,31,45) ~ 2,
+      between(D_2_health_trasport_length,0,30) ~ 1,
+      is.na(D_2_health_trasport_length)~ NA_real_
+    ),
+    
+    health_crit_5 = case_when(
+      rowSums(across(all_of(health_crit_5_var_1_lvl_4) , .fns = as.numeric), na.rm = T)>0 ~ 4, 
+      
+      rowSums(across(all_of(health_crit_5_var_1_lvl_3) , .fns = as.numeric), na.rm = T)>0 &
+        rowSums(across(all_of(health_crit_5_var_1_lvl_4) , .fns = as.numeric), na.rm = T)==0 ~ 3,
+      
+      rowSums(across(all_of(health_crit_5_var_1_lvl_2) , .fns = as.numeric), na.rm = T)>0 &
+        rowSums(across(all_of(health_crit_5_var_1_lvl_3) , .fns = as.numeric), na.rm = T)==0 &
+        rowSums(across(all_of(health_crit_5_var_1_lvl_4) , .fns = as.numeric), na.rm = T)==0 ~ 2,
+      
+      rowSums(across(all_of(health_crit_5_var_1_lvl_1) , .fns = as.numeric), na.rm = T)>0 |
+        is.na(D_12_medicines_barriers) ~ 1
+    )#,
+    
+    # health_crit_6 = case_when(
+    #   D_15_felt_stressed  %in% 'no' & D_16_depressed_mood %in% 'no' &  D_17_anxious  %in% 'no' ~ 1,
+    #   rowSums(across(all_of(c('D_15_felt_stressed','D_16_depressed_mood','D_17_anxious')), 
+    #                  ~ .x %in% 'yes')) <=2 ~ 2,
+    #   D_15_felt_stressed  %in% 'yes' & D_16_depressed_mood %in% 'yes' &  D_17_anxious  %in% 'yes' ~ 3,
+    #   
+    #   D_15_felt_stressed  %in% c('prefer_not_to_answer','dont_know') |
+    #     D_16_depressed_mood %in% c('prefer_not_to_answer','dont_know') | 
+    #     D_17_anxious  %in% c('prefer_not_to_answer','dont_know') |
+    #     is.na(D_15_felt_stressed) | is.na(D_16_depressed_mood) | is.na(D_17_anxious) ~ NA_real_
+    # )
+  ) #%>% 
+  # select(-names_to_drop)
+
+
+
+

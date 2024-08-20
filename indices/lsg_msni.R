@@ -35,6 +35,14 @@ main$lsg_livelihoods_v3 <- make_lsg(main,
 
 
 
+main$lsg_livelihoods_v4 <- make_lsg(main,
+                                    crit_to_4 = c("income_source",
+                                                  "income_quantity_v4",
+                                                  "coping"
+                                    )
+)
+
+
 
 # WASH +
 
@@ -99,7 +107,30 @@ main$lsg_education_v2 <- make_lsg(main,
                                )
 )
 
+# Education 3
 
+
+main$lsg_education_v3 <- make_lsg(main,
+                                  crit_to_4 = c(
+                                    "educ_crit_1",
+                                    "educ_crit_2"),
+                                  crit_to_3 = c(
+                                    "educ_crit_3"
+                                  )
+)
+
+
+# Education 4
+
+
+main$lsg_education_v4 <- make_lsg(main,
+                                  crit_to_4 = c(
+                                    "educ_crit_1",
+                                    "educ_crit_2"),
+                                  crit_to_3 = c(
+                                    "educ_crit_3"
+                                  )
+)
 
 
 
@@ -145,13 +176,36 @@ main$lsg_health <- make_lsg(main,
                             )
 
 
+# Health 2
+
+main$lsg_health_v2 <- make_lsg(main,
+                            crit_to_4 = c(
+                              "health_crit_1",
+                              "health_crit_3",
+                              "health_crit_5"
+                            ),
+                            crit_to_3 = c(
+                              "health_crit_2",
+                              "health_crit_4"
+                            )
+)
+
+
 
 
 # Protection
 
 
-
 main$lsg_protection <- make_lsg(main,
+                                crit_to_4plus = c("safety"),
+                                crit_to_3 = c("barriers")
+)
+
+
+# Protection 3
+
+
+main$lsg_protection_v3 <- make_lsg(main,
                                 crit_to_4plus = c("safety"),
                                 crit_to_3 = c("barriers")
 )
@@ -194,7 +248,22 @@ col <- c(
   )
 
 
+col_ccia_v2 <- c(
+  "lsg_livelihoods_v4",
+  #"lsg_wash_v2",
+  "lsg_education_v3",
+  "lsg_shelter_nfi",
+  "lsg_protection",
+  "lsg_health_v2",
+  "lsg_food_security"
+)
 
+
+
+
+main$ccia_v2_1 <- do.call(pmax, c(main[ , col_ccia_v2], na.rm = TRUE))
+
+# not working
 main <- main %>%
   mutate(
     CCIA = max(

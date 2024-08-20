@@ -80,6 +80,8 @@ shelter_issues_g9_undef <- c(
 #===
 
 shelter_issues_g10_lvl2 <- c(
+  "dont_know",
+  "prefer_not_to_answer",
   "insignificant",
   "minor"
 )
@@ -247,6 +249,7 @@ snfi <- data.list$main %>%
     issue_g9_cnt = rowSums(across(shelter_issues_g9, as.numeric),na.rm = TRUE),
     g9_undef_cnt = rowSums(across(shelter_issues_g9_undef, as.numeric),na.rm = TRUE),
     shelter_issues_2 = case_when(
+      #(issue_g9_cnt+g9_undef_cnt == 0) ~ NA,
       (
         G_10_shelter_assess %in% shelter_issues_g10_lvl4
       ) ~ 5,
@@ -271,6 +274,8 @@ snfi <- data.list$main %>%
         (issue_g9_cnt > 0 & issue_g9_cnt < 3) &
         (G_10_shelter_assess %in% shelter_issues_g10_lvl2)
       ) ~ 2,
+      (as.numeric(`G_9_curr_shelter_damage/none`) == 1) ~ 1,
+      (g9_undef_cnt > 0 | is.na(G_10_shelter_assess) | is.na(`G_9_curr_shelter_damage/none`)) ~ NA,
       TRUE ~ -1
     ),
     security_tenure = case_when(
@@ -371,7 +376,7 @@ snfi <- data.list$main %>%
       TRUE ~ -1
     )
   ) %>%
-  select(uuid, shelter_type, shelter_issues_1, shelter_issues_2, security_tenure, leccy, utility, domestic, nfis)
+  select(uuid, shelter_type, shelter_issues_1, shelter_issues_g9, shelter_issues_g9_undef, G_10_shelter_assess, `G_9_curr_shelter_damage/none`, shelter_issues_2, security_tenure, leccy, utility, domestic, nfis)
 
 data.list$main <- data.list$main %>%
   left_join(snfi, by = "uuid")
