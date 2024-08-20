@@ -159,6 +159,26 @@ main$lsg_shelter_nfi <- make_lsg(main,
 
 
 
+# Protection
+
+
+main$lsg_protection <- make_lsg(main,
+                                crit_to_4plus = c(
+                                  "safety"
+                                  ),
+                                crit_to_4 = c(
+                                  "needs",
+                                  "child_sep"
+                                  ),
+                                crit_to_3 = c(
+                                  "barriers",
+                                  "legal_assist"
+                                  )
+                        )
+
+
+
+
 
 # Health
 
@@ -208,24 +228,26 @@ main$lsg_health_v4 <- make_lsg(main,
                                )
                       )
 
+# Health 5
 
-
-# Protection
-
-
-main$lsg_protection <- make_lsg(main,
-                                crit_to_4plus = c("safety"),
-                                crit_to_3 = c("barriers")
+main$lsg_health_v5 <- make_lsg(main,
+                               crit_to_4plus = c(
+                                 "health_crit_1"
+                               ),
+                               crit_to_4 = c(
+                                 "health_crit_3",
+                                 "health_crit_5"
+                               ),
+                               crit_to_3 = c(
+                                 "health_crit_2",
+                                 "health_crit_4",
+                                 "health_crit_6"
+                               )
 )
 
 
-# Protection 3
 
 
-main$lsg_protection_v3 <- make_lsg(main,
-                                crit_to_4plus = c("safety"),
-                                crit_to_3 = c("barriers")
-)
 
 
 
@@ -254,46 +276,21 @@ main <- main %>%
 
 
 
-col <- c(
-  "lsg_protection",
-  "lsg_health",
-  "lsg_livelihoods_v3",
-  "lsg_wash_v2",
-  "lsg_shelter_nfi",
-  "lsg_education",
-  "lsg_food_security"
-  )
-
-
-col_ccia_v2 <- c(
+col_ccia_v3 <- c(
   "lsg_livelihoods_v4",
-  #"lsg_wash_v2",
-  "lsg_education_v3",
+  "lsg_wash_v2",
+  "lsg_education_v4",
   "lsg_shelter_nfi",
   "lsg_protection",
-  "lsg_health_v2",
+  "lsg_health_v4",
   "lsg_food_security"
 )
 
 
 
 
-main$ccia_v2_1 <- do.call(pmax, c(main[ , col_ccia_v2], na.rm = TRUE))
+main$ccia_v3 <- do.call(pmax, c(main[ , col_ccia_v3], na.rm = TRUE))
 
-# not working
-main <- main %>%
-  mutate(
-    CCIA = max(
-      as.integer(as.character(col[1])), 
-      as.integer(as.character(col[2])), 
-      as.integer(as.character(col[3])), 
-      as.integer(as.character(col[4])), 
-      as.integer(as.character(col[5])), 
-      as.integer(as.character(col[6])),
-      as.integer(as.character(col[7])),
-      na.rm = TRUE
-    )
-  )
 
 data.list$main <- main
 cat("Finish Calculating LSGs and CINM\n")

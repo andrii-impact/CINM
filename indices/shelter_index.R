@@ -376,7 +376,7 @@ snfi <- data.list$main %>%
       TRUE ~ -1
     )
   ) %>%
-  select(uuid, shelter_type, shelter_issues_1, shelter_issues_g9, shelter_issues_g9_undef, G_10_shelter_assess, `G_9_curr_shelter_damage/none`, shelter_issues_2, security_tenure, leccy, utility, domestic, nfis)
+  select(uuid, shelter_type, shelter_issues_1, shelter_issues_2, security_tenure, leccy, utility, domestic, nfis)
 
 data.list$main <- data.list$main %>%
   left_join(snfi, by = "uuid")

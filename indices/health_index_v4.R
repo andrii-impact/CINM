@@ -209,8 +209,8 @@ data.list$main <- data.list$main %>%
         D_16_depressed_mood %in% c('prefer_not_to_answer','dont_know') | 
         D_17_anxious  %in% c('prefer_not_to_answer','dont_know') |
         is.na(D_15_felt_stressed) | is.na(D_16_depressed_mood) | is.na(D_17_anxious) ~ NA_real_)
-  ) %>% 
-  select(-names_to_drop)
+  ) #%>% 
+  #select(-names_to_drop)
   
   
   
