@@ -3,6 +3,14 @@ library(writexl)
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(tidyverse, readxl, writexl, openxlsx, randomcoloR, sf, anytime, DT,
                cluster, survey, srvyr, knitr, webshot, docstring, tcltk, scales, utilityR)
+
+if(!require('utilityR')){
+  if(!require('devtools')){
+    install.packages('devtools')
+  }
+  devtools::install_github('https://github.com/REACH-WoU/utilityR', build_vignettes = T)
+}
+
 library(utilityR)
 
 # source("src/utils/utils_analysis.R")
