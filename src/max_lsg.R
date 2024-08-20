@@ -87,8 +87,7 @@ make_single_lsg <- function(.dataset,
         xx |> max(na.rm = T)
       }
     })
-  
-  
+  !is.null(crit_to_4plus)
   if (!is.null(crit_to_4plus)) {
     .dataset[["max_crit_to_4plus"]] <- max.value(.dataset, crit_to_4plus)
     .dataset <- .dataset %>% mutate(max_crit_to_4plus = case_when(is.na(max_crit_to_4plus) ~ 5,

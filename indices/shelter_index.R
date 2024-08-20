@@ -80,6 +80,8 @@ shelter_issues_g9_undef <- c(
 #===
 
 shelter_issues_g10_lvl2 <- c(
+  "dont_know",
+  "prefer_not_to_answer",
   "insignificant",
   "minor"
 )
@@ -172,15 +174,15 @@ utility_g16_undef <- c(
 #===
 
 nfis_j25_lvl3 <- c(
-  #"J_25_miss_nfi/winter_clothes_for_a_household_member",
-  #"J_25_miss_nfi/bedding_and_towels",
+  "J_25_miss_nfi/winter_clothes_for_a_household_member",
+  "J_25_miss_nfi/bedding_and_towels",
   "J_25_miss_nfi/heating_appliances",
   "J_25_miss_nfi/fuel_for_heating"
 )
 
 nfis_j25_lvl2 <- c(
-  "J_25_miss_nfi/bedding_and_towels",
-  "J_25_miss_nfi/winter_clothes_for_a_household_member",
+  #"J_25_miss_nfi/bedding_and_towels",
+  #"J_25_miss_nfi/winter_clothes_for_a_household_member",
   "J_25_miss_nfi/household_items",
   "J_25_miss_nfi/summer_clothes_for_a_household_member",
   "J_25_miss_nfi/kitchen_set",
@@ -247,6 +249,7 @@ snfi <- data.list$main %>%
     issue_g9_cnt = rowSums(across(shelter_issues_g9, as.numeric),na.rm = TRUE),
     g9_undef_cnt = rowSums(across(shelter_issues_g9_undef, as.numeric),na.rm = TRUE),
     shelter_issues_2 = case_when(
+      #(issue_g9_cnt+g9_undef_cnt == 0) ~ NA,
       (
         G_10_shelter_assess %in% shelter_issues_g10_lvl4
       ) ~ 5,
@@ -271,6 +274,8 @@ snfi <- data.list$main %>%
         (issue_g9_cnt > 0 & issue_g9_cnt < 3) &
         (G_10_shelter_assess %in% shelter_issues_g10_lvl2)
       ) ~ 2,
+      (as.numeric(`G_9_curr_shelter_damage/none`) == 1) ~ 1,
+      (g9_undef_cnt > 0 | is.na(G_10_shelter_assess) | is.na(`G_9_curr_shelter_damage/none`)) ~ NA,
       TRUE ~ -1
     ),
     security_tenure = case_when(

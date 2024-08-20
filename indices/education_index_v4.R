@@ -1,4 +1,3 @@
-
 crit_1_q2_level_3 <- c('lack_quiet_space','lack_equipment','lack_school_supplies','internet_bad',
                        'cannot_afford_the_direct_costs_of_education','inadequate_infrastructure_for_learning_in_safe_environment',
                        'lack_of_or_poor_quality_of_teachers','unable_enrol_in_school_lack_of_enrolment_space',
@@ -10,7 +9,7 @@ crit_1_q2_level_4 <- c('protection_risks_while_at_or_traveling_to_the_school','m
 
 
 
-educ_data_prel <- data.list$hh_members %>% 
+educ_data_prel <- data.list$loop_demographics  %>% 
   mutate(
     child = ifelse(between(as.numeric(B_5_hh_mem_age), 5,18),1,0),
     
@@ -44,8 +43,7 @@ names_to_drop <- setdiff(names(educ_data_prel),'uuid')
 
 
 
-# data.listdata.list$main <- 
-  data.list$main %>% 
+data.list$main <- data.list$main %>%
   left_join(educ_data_prel) %>% 
   mutate(
     educ_crit_1 = case_when(
@@ -88,7 +86,7 @@ names_to_drop <- setdiff(names(educ_data_prel),'uuid')
       
       educ_crit_1_var_3_undef > 0  | 
         G_17_internet_hours %in% c('dont_know','prefer_not_to_answer') ~ NA_real_
-      ),
+    ),
     
     educ_crit_3 = case_when(
       child == 0 ~ 1,
@@ -112,7 +110,5 @@ names_to_drop <- setdiff(names(educ_data_prel),'uuid')
         C_12_2_school_missile %in% c('dont_know','prefer_not_to_answer')|
         is.na(C_13_school_displ)|is.na(C_14_school_damage)|
         is.na(C_15_home_damage)|is.na(C_12_2_school_missile) ~ NA_real_
-    )) %>%
-  select(-all_of(names_to_drop))
-
-
+    )) #%>%
+  #select(-all_of(names_to_drop))

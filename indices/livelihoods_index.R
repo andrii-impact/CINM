@@ -27,9 +27,10 @@ j27_undefined <- c(
   "J_27_income_sources/prefer_not_to_answer"
 )
 
-median_inc <- 5865  #sic
+median_inc <- 5865
 new_magic_number = 6471.4
 new_magic_number_3 = 9707.1
+small_magic_number = 2324
 
 livelihoods <- data.list$main %>%
   mutate(
@@ -67,6 +68,13 @@ livelihoods <- data.list$main %>%
       as.numeric(total_inc_per_capita) > new_magic_number_3 ~ 1,
       TRUE ~ NA
     ),
+    income_quantity_v4 = case_when(
+      as.numeric(total_inc_per_capita) <= small_magic_number ~ 4,
+      as.numeric(total_inc_per_capita) <= new_magic_number & as.numeric(total_inc_per_capita) > small_magic_number  ~ 3,
+      as.numeric(total_inc_per_capita) <= new_magic_number_3 & as.numeric(total_inc_per_capita) > new_magic_number  ~ 2,
+      as.numeric(total_inc_per_capita) > new_magic_number_3 ~ 1,
+      TRUE ~ NA
+    ),
     coping = case_when(
       lcsi_score == "Emergency" ~ 4,
       lcsi_score == "Crisis" ~ 3,
@@ -76,7 +84,7 @@ livelihoods <- data.list$main %>%
       TRUE ~ -1
     )
   ) %>% 
-  select(uuid, income_source, income_quantity, income_quantity_v2, income_quantity_v3, coping)
+  select(uuid, income_source, income_quantity, income_quantity_v2, income_quantity_v3, income_quantity_v4, coping)
 
 data.list$main <- data.list$main %>%
   left_join(livelihoods, by = "uuid")
