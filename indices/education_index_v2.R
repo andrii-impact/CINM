@@ -10,7 +10,7 @@ crit_1_q2_level_4 <- c('protection_risks_while_at_or_traveling_to_the_school','m
 
 
 
-educ_data_prel <- data.list$loop_demographics %>% 
+educ_data_prel <- data.list$hh_members %>% 
   mutate(
     child = ifelse(between(as.numeric(B_5_hh_mem_age), 5,18),1,0),
     

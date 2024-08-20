@@ -44,10 +44,14 @@ names_to_drop <- setdiff(names(educ_data_prel),'uuid')
 
 
 
-data.list$main <- data.list$main %>% 
+# data.listdata.list$main <- 
+  data.list$main %>% 
   left_join(educ_data_prel) %>% 
   mutate(
     educ_crit_1 = case_when(
+      
+      child == 0 ~ 1,
+      
       (educ_crit_1_var_1_no >0 & educ_crit_1_var_2_lvl_4_var_1_no>0) ~ 4,
       
       (educ_crit_1_var_1_no >0 & educ_crit_1_var_2_lvl_3_var_1_no>0 & educ_crit_1_var_2_lvl_4 ==0) ~ 3,
@@ -64,17 +68,15 @@ data.list$main <- data.list$main %>%
     ),
     
     educ_crit_2 = case_when(
+      child == 0 ~ 1,
       
       (educ_crit_1_var_3_lvl_2 > 0 & G_17_internet_hours == 'never_0hrs' &
-         fsl_lcsi_crisis3 %in% c('no_had_no_need','not_applicable')) |
-        fsl_lcsi_crisis3 %in% c('no_exhausted','yes') ~ 4,
+         fsl_lcsi_crisis3 %in% c('no_had_no_need','not_applicable')) ~ 4,
       
-      (child == educ_crit_1_var_3_lvl_1 & G_17_internet_hours %in% 'never_0hrs' &
-         fsl_lcsi_crisis3 %in% c('no_had_no_need','not_applicable'))|
-        (educ_crit_1_var_3_lvl_2 > 0 & G_17_internet_hours == 'sometimes_1_11hrs' &
-           fsl_lcsi_crisis3 %in% c('no_had_no_need','not_applicable')) ~ 3,
+      (educ_crit_1_var_3_lvl_2 > 0 & G_17_internet_hours == 'sometimes_1_11hrs') |
+        fsl_lcsi_crisis3 %in% c('no_exhausted','yes') ~ 3,
       
-      (child == educ_crit_1_var_3_lvl_1 & G_17_internet_hours %in% 'sometimes_1_11hrs' &
+      (child == educ_crit_1_var_3_lvl_1 & G_17_internet_hours %in% c('sometimes_1_11hrs','never_0hrs') &
          fsl_lcsi_crisis3 %in% c('no_had_no_need','not_applicable')) |
         (educ_crit_1_var_3_lvl_2 > 0 & G_17_internet_hours == 'often_12_23hrs' &
            fsl_lcsi_crisis3 %in% c('no_had_no_need','not_applicable')) ~ 2,
@@ -85,9 +87,12 @@ data.list$main <- data.list$main %>%
         G_17_internet_hours %in% 'always_24hrs' ~ 1,
       
       educ_crit_1_var_3_undef > 0  | 
-        G_17_internet_hours %in% c('dont_know','prefer_not_to_answer') ~ NA_real_),
+        G_17_internet_hours %in% c('dont_know','prefer_not_to_answer') ~ NA_real_
+      ),
     
     educ_crit_3 = case_when(
+      child == 0 ~ 1,
+      
       C_13_school_displ %in% 'yes' | C_14_school_damage %in% 'yes' |
         C_15_home_damage %in% 'yes' ~ 3,
       
@@ -109,6 +114,5 @@ data.list$main <- data.list$main %>%
         is.na(C_15_home_damage)|is.na(C_12_2_school_missile) ~ NA_real_
     )) %>%
   select(-all_of(names_to_drop))
-
 
 

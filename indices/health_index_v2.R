@@ -176,20 +176,6 @@ data.list$main <- data.list$main %>%
       
       rowSums(across(all_of(health_crit_5_var_1_lvl_1) , .fns = as.numeric), na.rm = T)>0 |
         is.na(D_12_medicines_barriers) ~ 1
-    ),
-    
-    health_crit_6 = case_when(
-      D_15_felt_stressed  %in% 'yes' & D_16_depressed_mood %in% 'yes' &  D_17_anxious  %in% 'yes' ~ 3,
-      
-      rowSums(across(all_of(c('D_15_felt_stressed','D_16_depressed_mood','D_17_anxious')), 
-                     ~ .x %in% 'yes')) <=2 ~ 2,
-      
-      D_15_felt_stressed  %in% 'no' & D_16_depressed_mood %in% 'no' &  D_17_anxious  %in% 'no' ~ 1,
-      
-      D_15_felt_stressed  %in% c('prefer_not_to_answer','dont_know') |
-        D_16_depressed_mood %in% c('prefer_not_to_answer','dont_know') | 
-        D_17_anxious  %in% c('prefer_not_to_answer','dont_know') |
-        is.na(D_15_felt_stressed) | is.na(D_16_depressed_mood) | is.na(D_17_anxious) ~ NA_real_
     )
   ) %>% 
   select(-names_to_drop)
