@@ -68,20 +68,15 @@ data.list$main <- data.list$main %>%
     educ_crit_2 = case_when(
       child == 0 ~ 1,
       
-      (educ_crit_1_var_3_lvl_2 > 0 & G_17_internet_hours == 'never_0hrs' &
-         fsl_lcsi_crisis3 %in% c('no_had_no_need','not_applicable')) ~ 4,
+      #(educ_crit_1_var_3_lvl_2 > 0 & G_17_internet_hours == 'never_0hrs') ~ 4,
       
-      (educ_crit_1_var_3_lvl_2 > 0 & G_17_internet_hours == 'sometimes_1_11hrs') |
-        fsl_lcsi_crisis3 %in% c('no_exhausted','yes') ~ 3,
+      (educ_crit_1_var_3_lvl_2 > 0 & G_17_internet_hours == 'never_0hrs') | (educ_crit_1_var_3_lvl_2 > 0 & G_17_internet_hours == 'sometimes_1_11hrs') ~ 3,
       
-      (child == educ_crit_1_var_3_lvl_1 & G_17_internet_hours %in% c('sometimes_1_11hrs','never_0hrs') &
-         fsl_lcsi_crisis3 %in% c('no_had_no_need','not_applicable')) |
-        (educ_crit_1_var_3_lvl_2 > 0 & G_17_internet_hours == 'often_12_23hrs' &
-           fsl_lcsi_crisis3 %in% c('no_had_no_need','not_applicable')) ~ 2,
+      (child == educ_crit_1_var_3_lvl_1 & G_17_internet_hours %in% c('sometimes_1_11hrs','never_0hrs')) |
+        (educ_crit_1_var_3_lvl_2 > 0 & G_17_internet_hours == 'often_12_23hrs') ~ 2,
       
       child == 0 | 
-        (child == educ_crit_1_var_3_lvl_1 & G_17_internet_hours == 'often_12_23hrs' &
-           fsl_lcsi_crisis3 %in% c('no_had_no_need','not_applicable')) |
+        (child == educ_crit_1_var_3_lvl_1 & G_17_internet_hours == 'often_12_23hrs') |
         G_17_internet_hours %in% 'always_24hrs' ~ 1,
       
       educ_crit_1_var_3_undef > 0  | 
@@ -90,9 +85,8 @@ data.list$main <- data.list$main %>%
     
     educ_crit_3 = case_when(
       child == 0 ~ 1,
-      
-      C_13_school_displ %in% 'yes' | C_14_school_damage %in% 'yes' |
-        C_15_home_damage %in% 'yes' ~ 3,
+      C_15_home_damage %in% 'yes' ~ 4,
+      C_13_school_displ %in% 'yes' | C_14_school_damage %in% 'yes' ~ 3,
       
       C_13_school_displ %in% 'no' & C_14_school_damage %in% 'no' 
       & C_15_home_damage %in% 'no' & C_12_2_school_missile %in% 'yes' ~ 2,

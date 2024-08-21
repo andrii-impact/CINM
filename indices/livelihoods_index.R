@@ -75,6 +75,13 @@ livelihoods <- data.list$main %>%
       as.numeric(total_inc_per_capita) > new_magic_number_3 ~ 1,
       TRUE ~ NA
     ),
+    income_quantity_v5 = case_when(
+      as.numeric(total_exp_per_capita) <= small_magic_number ~ 4,
+      as.numeric(total_exp_per_capita) <= new_magic_number & as.numeric(total_exp_per_capita) > small_magic_number  ~ 3,
+      as.numeric(total_exp_per_capita) <= new_magic_number_3 & as.numeric(total_exp_per_capita) > new_magic_number  ~ 2,
+      as.numeric(total_exp_per_capita) > new_magic_number_3 ~ 1,
+      TRUE ~ NA
+    ),
     coping = case_when(
       lcsi_score == "Emergency" ~ 4,
       lcsi_score == "Crisis" ~ 3,
@@ -84,7 +91,7 @@ livelihoods <- data.list$main %>%
       TRUE ~ -1
     )
   ) %>% 
-  select(uuid, income_source, income_quantity, income_quantity_v2, income_quantity_v3, income_quantity_v4, coping)
+  select(uuid, income_source, income_quantity, income_quantity_v2, income_quantity_v3, income_quantity_v4, income_quantity_v5, coping)
 
 data.list$main <- data.list$main %>%
   left_join(livelihoods, by = "uuid")

@@ -44,6 +44,15 @@ main$lsg_livelihoods_v4 <- make_lsg(main,
 
 
 
+main$lsg_livelihoods_v5 <- make_lsg(main,
+                                    crit_to_4 = c("income_source",
+                                                  "income_quantity_v5",
+                                                  "coping"
+                                    )
+)
+
+
+
 # WASH +
 
 
@@ -78,6 +87,26 @@ main$lsg_wash_v2 <- make_lsg(main,
                                "wash_crit_4",
                                "wash_crit_5",
                                "wash_crit_7"
+                             )
+)
+
+
+# WASH 4
+
+
+main$lsg_wash_v4 <- make_lsg(main,
+                             crit_to_4plus = c(
+                               "wash_crit_1",
+                               "wash_crit_2",
+                               "wash_crit_3"
+                             ),
+                             crit_to_4 = c(
+                               "wash_crit_4",
+                               "wash_crit_5",
+                               "wash_crit_7"
+                             ),
+                             crit_to_3 = c(
+                               "wash_crit_6"
                              )
 )
 
@@ -126,9 +155,9 @@ main$lsg_education_v3 <- make_lsg(main,
 main$lsg_education_v4 <- make_lsg(main,
                                   crit_to_4 = c(
                                     "educ_crit_1",
-                                    "educ_crit_2"),
+                                    "educ_crit_3"),
                                   crit_to_3 = c(
-                                    "educ_crit_3"
+                                    "educ_crit_2"
                                   )
 )
 
@@ -278,7 +307,7 @@ main <- main %>%
 
 col_ccia_v3 <- c(
   "lsg_livelihoods_v4",
-  "lsg_wash_v2",
+  "lsg_wash_v4",
   "lsg_education_v4",
   "lsg_shelter_nfi",
   "lsg_protection",
