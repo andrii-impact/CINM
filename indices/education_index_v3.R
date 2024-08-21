@@ -10,11 +10,7 @@ crit_1_q2_level_4 <- c('protection_risks_while_at_or_traveling_to_the_school','m
 
 
 
-<<<<<<< HEAD
 educ_data_prel <- data.list$loop_demographics %>% 
-=======
-educ_data_prel <- data.list$hh_members %>% 
->>>>>>> 12808258a861d7c46e35296c45eba3fd774a75a2
   mutate(
     child = ifelse(between(as.numeric(B_5_hh_mem_age), 5,18),1,0),
     
@@ -115,5 +111,5 @@ data.list$main <- data.list$main %>%
         C_12_2_school_missile %in% c('dont_know','prefer_not_to_answer')|
         is.na(C_13_school_displ)|is.na(C_14_school_damage)|
         is.na(C_15_home_damage)|is.na(C_12_2_school_missile) ~ NA_real_
-    )) #%>%
-  # select(-all_of(names_to_drop))
+    )) %>%
+  select(-all_of(names_to_drop))

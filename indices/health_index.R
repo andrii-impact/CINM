@@ -47,7 +47,7 @@ health_crit_5_var_1_lvl_4 <- c('D_12_medicines_barriers/security_concerns',
 
 
 
-health_data_prel <- data.list$hh_members %>% 
+health_data_prel <- data.list$loop_demographics %>% 
   mutate(
     member = 1,
     health_crit_1_var_1_need = ifelse(D_3_health_need  %in% 'yes',1,0),
@@ -182,7 +182,9 @@ data.list$main <- data.list$main %>%
       D_15_felt_stressed  %in% 'yes' & D_16_depressed_mood %in% 'yes' &  D_17_anxious  %in% 'yes' ~ 3,
       
       rowSums(across(all_of(c('D_15_felt_stressed','D_16_depressed_mood','D_17_anxious')), 
-                     ~ .x %in% 'yes')) <=2 ~ 2,
+                     ~ .x %in% 'yes')) <=2 & 
+        rowSums(across(all_of(c('D_15_felt_stressed','D_16_depressed_mood','D_17_anxious')), 
+                       ~ .x %in% 'yes')) > 0 ~ 2,
       
       D_15_felt_stressed  %in% 'no' & D_16_depressed_mood %in% 'no' &  D_17_anxious  %in% 'no' ~ 1,
       
