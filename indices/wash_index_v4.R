@@ -111,8 +111,7 @@ crit_7_q3_level_4 <- c('H_9_enough_water/flushing_toilet','H_9_enough_water/none
 crit_7_q3_undef <- c('H_9_enough_water/dont_know','H_9_enough_water/prefer_not_to_answer')
 
 
-# data.list$main <- 
-  data.list$main %>% 
+data.list$main <- data.list$main %>% 
   mutate(H_7_water_lack = as.numeric(H_7_water_lack)) %>% 
   mutate(
     wash_crit_1 = case_when(
@@ -237,12 +236,12 @@ crit_7_q3_undef <- c('H_9_enough_water/dont_know','H_9_enough_water/prefer_not_t
       grepl(paste0('(',paste0(crit_5_q1_level_undef, collapse = ')|('),')'),J_25_miss_nfi) | is.na(J_25_miss_nfi) ~ NA_real_
     ),
     
-    wash_crit_6 = case_when(
-      H_18_garbage_disposal %in% crit_6_q1_level_3 ~ 3,
-      H_18_garbage_disposal %in% crit_6_q1_level_2 ~ 2,
-      H_18_garbage_disposal %in% crit_6_q1_level_1 ~ 1,
-      H_18_garbage_disposal %in% crit_6_q1_level_undef | is.na(H_18_garbage_disposal) ~ NA_real_
-    ),
+    # wash_crit_6 = case_when(
+    #   H_18_garbage_disposal %in% crit_6_q1_level_3 ~ 3,
+    #   H_18_garbage_disposal %in% crit_6_q1_level_2 ~ 2,
+    #   H_18_garbage_disposal %in% crit_6_q1_level_1 ~ 1,
+    #   H_18_garbage_disposal %in% crit_6_q1_level_undef | is.na(H_18_garbage_disposal) ~ NA_real_
+    # ),
     
     
     wash_crit_7 = case_when(
@@ -295,5 +294,4 @@ crit_7_q3_undef <- c('H_9_enough_water/dont_know','H_9_enough_water/prefer_not_t
         rowSums(across(all_of(crit_7_q3_undef),.fns = as.numeric), na.rm = T)>0 |
         is.na(H_8_water_source_dom) | is.na(G_16_utility_interrupt)~ NA_real_
     )
-  ) %>% 
-    select(wash_crit_3) %>% table()
+  )
