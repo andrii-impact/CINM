@@ -111,7 +111,7 @@ crit_7_q3_level_4 <- c('H_9_enough_water/flushing_toilet','H_9_enough_water/none
 crit_7_q3_undef <- c('H_9_enough_water/dont_know','H_9_enough_water/prefer_not_to_answer')
 
 
-data.list$main <- data.list$main %>% 
+wash <- data.list$main %>% 
   mutate(H_7_water_lack = as.numeric(H_7_water_lack)) %>% 
   mutate(
     wash_crit_1 = case_when(
@@ -125,45 +125,41 @@ data.list$main <- data.list$main %>%
     wash_crit_2 = case_when(
       H_2_water_source %in% c('rainwater_collection','surface_water')  ~ 5,
       
-      (H_2_water_source %in% c(crit_2_q1_improved_dr,crit_2_q1_improved_on_prem) &
-         H_5_water_assess %in% crit_2_q2_unacceptable &
-         H_6_water_treat  %in% crit_2_q3_cannot_treat) |
+      # (H_2_water_source %in% crit_2_q1_improved_on_prem &
+      #    H_5_water_assess %in% crit_2_q2_unacceptable) |
         (H_2_water_source %in% c('unprotected_well','unprotected_spring') &
-           H_6_water_treat  %in% crit_2_q3_cannot_treat)~ 4,
-      
-      (H_2_water_source %in% c( c(crit_2_q1_improved_dr,crit_2_q1_improved_on_prem)) &
-         H_5_water_assess %in% crit_2_q2_unacceptable &
-         H_6_water_treat  %in% crit_2_q3_can_treat)|
-        (H_2_water_source %in% c( c(crit_2_q1_improved_dr,crit_2_q1_improved_on_prem)) &
-           H_5_water_assess %in% crit_2_q2_acceptable &
-           H_6_water_treat  %in% crit_2_q3_cannot_treat)|
-        (H_2_water_source %in% c('unprotected_well','unprotected_spring') &
-           H_6_water_treat  %in% crit_2_q3_can_treat) |
-        ((H_2_water_source %in% c( c(crit_2_q1_improved_dr)) &
-            as.numeric(H_3_1_water_fetch_int) >30 &
-            H_5_water_assess %in% crit_2_q2_acceptable &
-            H_6_water_treat  %in% crit_2_q3_can_treat))|
-        ((H_2_water_source %in% c( c(crit_2_q1_improved_dr)) &
-            H_4_water_range %in% c('more_than_30_minutes_but_less_than_1_hour','more_than_1_hour') &
-            H_5_water_assess %in% crit_2_q2_acceptable &
-            H_6_water_treat  %in% crit_2_q3_can_treat)) ~ 3,
+           H_5_water_assess %in% crit_2_q2_unacceptable)~ 4,
       
       (H_2_water_source %in% crit_2_q1_improved_dr &
-        as.numeric(H_3_1_water_fetch_int) <= 30 &
-        H_5_water_assess %in% crit_2_q2_acceptable &
-        H_6_water_treat  %in% crit_2_q3_can_treat) |
-        (H_2_water_source %in% crit_2_q1_improved_dr &
-           H_4_water_range %in%  '30_minutes_or_less' &
-           H_5_water_assess %in% crit_2_q2_acceptable &
-           H_6_water_treat  %in% crit_2_q3_can_treat) ~ 2,
+         (as.numeric(H_3_1_water_fetch_int) > 60 | (H_3_water_fetch == "dont_know" & H_4_water_range == "more_than_1_hour")) &
+         H_5_water_assess %in% crit_2_q2_acceptable) |
+      (H_2_water_source %in% c( c(crit_2_q1_improved_dr,crit_2_q1_improved_on_prem)) &
+         H_5_water_assess %in% crit_2_q2_unacceptable)|
+        # (H_2_water_source %in% c( c(crit_2_q1_improved_dr,crit_2_q1_improved_on_prem)) &
+        #    H_5_water_assess %in% crit_2_q2_acceptable) |
+        (H_2_water_source %in% c('unprotected_well','unprotected_spring') & H_5_water_assess %in% crit_2_q2_acceptable) ~ 3,
+        # ((H_2_water_source %in% c( c(crit_2_q1_improved_dr)) &
+        #     as.numeric(H_3_1_water_fetch_int) >30 &
+        #     H_5_water_assess %in% crit_2_q2_acceptable &
+        #     H_6_water_treat  %in% crit_2_q3_can_treat))|
+        # ((H_2_water_source %in% c( c(crit_2_q1_improved_dr)) &
+        #     H_4_water_range %in% c('more_than_30_minutes_but_less_than_1_hour','more_than_1_hour') &
+        #     H_5_water_assess %in% crit_2_q2_acceptable &
+        #     H_6_water_treat  %in% crit_2_q3_can_treat)) ~ 3,
+      
+      (H_2_water_source %in% crit_2_q1_improved_dr &
+        (as.numeric(H_3_1_water_fetch_int) <= 60 | (H_3_water_fetch == "dont_know" & H_4_water_range != "more_than_1_hour")) &
+        H_5_water_assess %in% crit_2_q2_acceptable) ~2, # |
+        # (H_2_water_source %in% crit_2_q1_improved_dr &
+        #    H_4_water_range %in%  '30_minutes_or_less' &
+        #    H_5_water_assess %in% crit_2_q2_acceptable &
+        #    H_6_water_treat  %in% crit_2_q3_can_treat) ~ 2,
       
       (H_2_water_source %in% crit_2_q1_improved_on_prem &
-        H_5_water_assess %in% crit_2_q2_acceptable &
-        H_6_water_treat  %in% crit_2_q3_can_treat)|
+        H_5_water_assess %in% crit_2_q2_acceptable)|
         (H_2_water_source %in% crit_2_q1_improved_dr &
            H_3_water_fetch %in%  'do_not_cllect' &
-           H_5_water_assess %in% crit_2_q2_acceptable &
-           H_6_water_treat  %in% crit_2_q3_can_treat) ~ 1,
+           H_5_water_assess %in% crit_2_q2_acceptable) ~ 1,
       
       H_2_water_source %in% c('other','dont_know','prefer_not_to_answer') |
         H_5_water_assess %in% c('dont_know','prefer_not_to_answer') |
@@ -202,8 +198,7 @@ data.list$main <- data.list$main %>%
         
         (H_14_toilet %in% crit_3_q1_improved_s &
         (H_19_sewage %in% crit_3_q2_can_manage | is.na(H_19_sewage))&
-        H_17_safe_toilet %in% 'yes' & H_15_shared_toilet  == 'yes') 
-        ~ 2,
+        H_17_safe_toilet %in% 'yes' & H_15_shared_toilet  == 'yes') ~ 2,
       
       H_14_toilet %in% crit_3_q1_improved_s &
         (H_19_sewage %in% crit_3_q2_can_manage | is.na(H_19_sewage))&
@@ -225,12 +220,12 @@ data.list$main <- data.list$main %>%
       
       H_10_wash_issues %in% 'yes_with_issues'  & rowSums(across(all_of(crit_4_q2_level_2),.fns = as.numeric), na.rm = T) ==1 ~ 2,
       H_10_wash_issues %in% 'yes_without_any_issues' ~ 1,
-      is.na(H_11_wash_issues_type)~ NA_real_
+      is.na(H_11_wash_issues_type) ~ NA_real_
     ),
     
     wash_crit_5 = case_when(
-      grepl(paste0('(',paste0(crit_5_q1_level_4, collapse = ')|('),')'),J_25_miss_nfi) ~ 4,
-      grepl(paste0('(',paste0(crit_5_q1_level_3, collapse = ')|('),')'),J_25_miss_nfi) ~ 3,
+      grepl(paste0('(',paste0(crit_5_q1_level_4, collapse = ')|('),')'),J_25_miss_nfi) | (H_13_soap == "no") | (H_12_hand_washing == "no_handwashing_place_in_dwellingyardplot") ~ 3,
+      grepl(paste0('(',paste0(crit_5_q1_level_3, collapse = ')|('),')'),J_25_miss_nfi) | (H_13_soap == "no") | (H_12_hand_washing == "no_handwashing_place_in_dwellingyardplot") ~ 3,
       grepl(paste0('(',paste0(crit_5_q1_level_2, collapse = ')|('),')'),J_25_miss_nfi) ~ 2,
       grepl(paste0('(',paste0(crit_5_q1_level_na, collapse = ')|('),')'),J_25_miss_nfi) ~ 1,
       grepl(paste0('(',paste0(crit_5_q1_level_undef, collapse = ')|('),')'),J_25_miss_nfi) | is.na(J_25_miss_nfi) ~ NA_real_
@@ -243,7 +238,14 @@ data.list$main <- data.list$main %>%
     #   H_18_garbage_disposal %in% crit_6_q1_level_undef | is.na(H_18_garbage_disposal) ~ NA_real_
     # ),
     
-    
+    wash_crit_6 = case_when(
+      (H_6_water_treat %in% c("no_need_to_but_cannot_treat_the_water")) ~ 3,
+      #() ~ 2,
+      (H_6_water_treat %in% c("yes", "no_no_need_to_treat_the_water", "dont_know")) ~ 1,
+      H_6_water_treat == "prefer_not_to_answer" ~ NA,
+      TRUE ~ -1
+    ),
+
     wash_crit_7 = case_when(
       (rowSums(across(all_of(crit_7_q1_improved),.fns = as.numeric), na.rm = T) >0 &
          (rowSums(across(all_of(c(crit_7_q1_improved,crit_7_q1_stressed)),.fns = as.numeric), na.rm = T) > 
@@ -294,4 +296,9 @@ data.list$main <- data.list$main %>%
         rowSums(across(all_of(crit_7_q3_undef),.fns = as.numeric), na.rm = T)>0 |
         is.na(H_8_water_source_dom) | is.na(G_16_utility_interrupt)~ NA_real_
     )
-  )
+  ) %>%
+  select(uuid, wash_crit_1, wash_crit_2, wash_crit_3, wash_crit_4, wash_crit_5, wash_crit_6, wash_crit_7)
+
+
+data.list$main <- data.list$main %>%
+  left_join(wash, by = "uuid")

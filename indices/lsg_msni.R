@@ -102,11 +102,10 @@ main$lsg_wash_v4 <- make_lsg(main,
                              ),
                              crit_to_4 = c(
                                "wash_crit_4",
-                               "wash_crit_5",
                                "wash_crit_7"
                              ),
                              crit_to_3 = c(
-                               "wash_crit_6"
+                               "wash_crit_5"
                              )
 )
 
@@ -251,9 +250,9 @@ main$lsg_health_v4 <- make_lsg(main,
                                  "health_crit_5"
                                ),
                                crit_to_3 = c(
-                                 "health_crit_2",
+                                 "health_crit_2"
                                  #"health_crit_4",
-                                 "health_crit_6"
+                                 #"health_crit_6"
                                )
                       )
 
@@ -269,8 +268,8 @@ main$lsg_health_v5 <- make_lsg(main,
                                ),
                                crit_to_3 = c(
                                  "health_crit_2",
-                                 "health_crit_4",
-                                 "health_crit_6"
+                                 "health_crit_4"
+                                 #"health_crit_6"
                                )
 )
 
@@ -305,7 +304,7 @@ main <- main %>%
 
 
 
-col_ccia_v3 <- c(
+col_ccia_v4 <- c(
   "lsg_livelihoods_v4",
   "lsg_wash_v4",
   "lsg_education_v4",
@@ -318,7 +317,7 @@ col_ccia_v3 <- c(
 
 
 
-main$ccia_v3 <- do.call(pmax, c(main[ , col_ccia_v3], na.rm = TRUE))
+main$ccia_v4 <- do.call(pmax, c(main[ , col_ccia_v4], na.rm = TRUE))
 
 
 data.list$main <- main

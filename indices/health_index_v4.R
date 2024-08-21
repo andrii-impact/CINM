@@ -102,7 +102,7 @@ health_data_prel <- data.list$loop_demographics %>%
 names_to_drop <- setdiff(names(health_data_prel),'uuid')
 
 
-data.list$main <- data.list$main %>% 
+health <- data.list$main %>% 
   left_join(health_data_prel) %>% 
   mutate(
     health_crit_1 = case_when(
@@ -199,7 +199,7 @@ data.list$main <- data.list$main %>%
       
       
       (D_15_felt_stressed  %in% 'no' & D_16_depressed_mood %in% 'no' &  D_17_anxious  %in% 'no') |
-        (rowSums(across(all_of(c('D_15_felt_stressed','D_16_depressed_mood','D_17_anxious')), ~ .x %in% 'yes')) >0 &
+        (rowSums(across(all_of(c('D_15_felt_stressed','D_16_depressed_mood','D_17_anxious')), ~ .x %in% 'yes')) == 3 &
            ! K_2_first %in% 'household_members_feeling_very_distressed_upset_sad_worried_scared_or_angry' &
            ! K_2_second %in% 'household_members_feeling_very_distressed_upset_sad_worried_scared_or_angry' &
            ! K_2_third %in% 'household_members_feeling_very_distressed_upset_sad_worried_scared_or_angry'
@@ -209,11 +209,12 @@ data.list$main <- data.list$main %>%
         D_16_depressed_mood %in% c('prefer_not_to_answer','dont_know') | 
         D_17_anxious  %in% c('prefer_not_to_answer','dont_know') |
         is.na(D_15_felt_stressed) | is.na(D_16_depressed_mood) | is.na(D_17_anxious) ~ NA_real_)
-  ) #%>% 
-  #select(-names_to_drop)
+  ) %>% 
+  select(uuid, health_crit_1, health_crit_2, health_crit_3, health_crit_4, health_crit_5, health_crit_6)
   
   
-  
+data.list$main <- data.list$main %>%
+  left_join(health, by = "uuid")
   
   
   
