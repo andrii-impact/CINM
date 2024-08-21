@@ -110,5 +110,5 @@ data.list$main <- data.list$main %>%
         C_12_2_school_missile %in% c('dont_know','prefer_not_to_answer')|
         is.na(C_13_school_displ)|is.na(C_14_school_damage)|
         is.na(C_15_home_damage)|is.na(C_12_2_school_missile) ~ NA_real_
-    )) #%>%
-  #select(-all_of(names_to_drop))
+    )) %>%
+  select(-all_of(names_to_drop))
